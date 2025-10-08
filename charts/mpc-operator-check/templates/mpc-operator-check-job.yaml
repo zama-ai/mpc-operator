@@ -1,0 +1,206 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mpc-operator-check
+  annotations:
+    "helm.sh/hook": "pre-install,pre-upgrade"
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: 0
+  completionMode: Indexed
+  backoffLimitPerIndex: 1
+  maxFailedIndexes: 1
+  ttlSecondsAfterFinished: {{ .Values.job.ttlSecondsAfterFinished | int }}
+  template:
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- if .Values.awsCli.enabled }}
+        - name: aws-check
+          image: {{ .Values.awsCli.image.repository }}:{{ .Values.awsCli.image.tag }}
+          imagePullPolicy: Always
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=================================================="
+              {{- .Values.awsCli.script | nindent 14 }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.configmap.name }}
+        {{- end }}
+        {{- if .Values.gatewayNode.enabled }}
+        - name: gateway-node-check
+          image: {{ .Values.gatewayNode.image.repository }}:{{ .Values.gatewayNode.image.tag }}
+          imagePullPolicy: Always
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=================================================="
+              {{- .Values.gatewayNode.script | nindent 14 }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.configmap.name }}
+        {{- end }}
+        {{- if .Values.ethWallet.enabled }}
+        - name: eth-wallet-check
+          image: {{ .Values.ethWallet.image.repository }}:{{ .Values.ethWallet.image.tag }}
+          imagePullPolicy: Always
+          command:
+            - /bin/sh
+            - -c
+            - |
+              cast wallet address --private-key $KMS_CONNECTOR_PRIVATE_KEY > /config/connector-wallet-address
+              echo "=================================================="
+              {{- .Values.ethWallet.script | nindent 14 }}
+          env:
+            - name: KMS_CONNECTOR_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.ethWallet.secret.name }}
+                  key: {{ .Values.ethWallet.secret.key }}
+          volumeMounts:
+            - name: config
+              mountPath: /config
+        {{- end }}
+        {{- if .Values.kubectl.enabled }}
+        - name: kubernetes-namespace-check
+          image: {{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}
+          imagePullPolicy: Always
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=================================================="
+              {{- .Values.kubectl.script | nindent 14 }}
+        {{- end }}
+        {{- if .Values.postgres.enabled }}
+        - name: postgres-check
+          image: {{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}
+          imagePullPolicy: Always
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=================================================="
+              {{- .Values.postgres.script | nindent 14 }}
+          env:
+            - name: DATABASE_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: connector-database
+                  key: endpoint
+            - name: DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: connector-database
+                  key: username
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: connector-database
+                  key: password
+            - name: DATABASE_URL
+              value: "postgresql://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@$(DATABASE_ENDPOINT)/kmsconnector"
+        {{- end }}
+        {{- if .Values.kmsCoreClient.enabled }}
+        - name: kms-config
+          image: {{ .Values.utils.image.repository }}:{{ .Values.utils.image.tag }}
+          imagePullPolicy: Always
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Substitute env vars into kms-server.toml
+              export KMS_CORE__THRESHOLD__MY_ID=${KMS_CORE__THRESHOLD__MY_ID:=1}
+              envsubst < /chart-config/kms-server.toml > /config/kms-server.toml
+              envsubst < /chart-config/vaults.toml >> /config/kms-server.toml
+              # Fetch KMS Signer address from KMS Public bucket
+              curl -sS "${CORE_CLIENT__S3_ENDPOINT}${KMS_CORE__PRIVATE_VAULT__STORAGE__S3__PREFIX}/PUB-p1/VerfAddress/60b7070add74be3827160aa635fb255eeeeb88586c4debf7ab1134ddceb4beee" > /config/kms-signer-address
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.configmap.name }}
+          volumeMounts:
+            - name: chart-config
+              mountPath: /chart-config
+            - name: config
+              mountPath: /config
+      containers:
+        - name: run-kms-health-check
+          image: {{ .Values.kmsCoreClient.image.repository }}:{{ .Values.kmsCoreClient.image.tag }}
+          imagePullPolicy: Always
+          workingDir: /config
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=================================================="
+              {{- .Values.kmsCoreClient.script | nindent 14 }}
+              if [[ ! $KMS_CORE__THRESHOLD__MY_ID =~ ^-?[0-9]+$ ]]; then
+                echo "Error: $KMS_CORE__THRESHOLD__MY_ID must be an integer, got: '$KMS_CORE__THRESHOLD__MY_ID'"
+                exit 1
+              fi
+              if [[ -z "connector-wallet-address" ]]; then
+                echo "Error: cannot get connector wallet address, ensure it is created in the secret: {{ .Values.ethWallet.secret.name }}, key: {{ .Values.ethWallet.secret.key }}"
+                exit 1
+              fi
+              if [[ -z "kms-signer-address" ]]; then
+                echo "Error: cannot get KMS signer address, ensure it is created in the public bucket VerfAddress folder"
+                exit 1
+              fi
+              echo "Gateway Contract Configuration for Party #${KMS_CORE__THRESHOLD__MY_ID} (to share with Zama Governance)"
+              echo "KMS_NODE_STORAGE_URL_${KMS_CORE__THRESHOLD__MY_ID}=${CORE_CLIENT__S3_ENDPOINT}"
+              echo "KMS_TX_SENDER_ADDRESS_${KMS_CORE__THRESHOLD__MY_ID}=$(cat /config/connector-wallet-address)"
+              echo "KMS_SIGNER_ADDRESS_${KMS_CORE__THRESHOLD__MY_ID}=$(cat /config/kms-signer-address)"
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.configmap.name }}
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      volumes:
+        - name: config
+          emptyDir: {}
+        - name: chart-config
+          configMap:
+            name: {{ .Values.kmsCoreClient.configmap.name }}
+            items:
+              - key: kms-server.toml
+                path: kms-server.toml
+              - key: vaults.toml
+                path: vaults.toml
+      {{- else }}
+      containers:
+        - name: kube-utils
+          image: {{ .Values.utils.image.repository }}:{{ .Values.utils.image.tag }}
+          imagePullPolicy: Always
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=================================================="
+              {{- .Values.utils.script | nindent 14 }}
+      {{- end }}
+      restartPolicy: Never
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

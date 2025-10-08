@@ -1,0 +1,152 @@
+awsCli:
+  enabled: true
+  image:
+    # Public image
+    # repository: amazon/aws-cli
+    # tag: 2.30.1
+    # Private secure image
+    repository: hub.zama.ai/zama-protocol/zama.ai/aws-cli
+    tag: "2.30-dev"
+  script: |
+    echo "AWS check"
+    echo "Listing all files in KMS-Core Public S3 bucket: $KMS_CORE__PUBLIC_VAULT__STORAGE__S3__BUCKET"
+    aws s3 ls --recursive s3://$KMS_CORE__PUBLIC_VAULT__STORAGE__S3__BUCKET
+    echo "Listing all files in KMS-Core Private S3 bucket: $KMS_CORE__PRIVATE_VAULT__STORAGE__S3__BUCKET"
+    aws s3 ls --recursive s3://$KMS_CORE__PRIVATE_VAULT__STORAGE__S3__BUCKET
+gatewayNode:
+  enabled: true
+  image:
+    # Public image
+    # repository: cgr.dev/chainguard/curl
+    # tag: latest-dev
+    # Private secure image
+    repository: hub.zama.ai/zama-protocol/zama-ai/security-hub/infra/kube-utils
+    tag: v0.4.0
+  script: |
+    echo "Gateway Node checks"
+    curl -s http://gateway-node:8547 -X POST -H "Content-Type: application/json" \
+      --data '{"method":"eth_chainId","params":[],"id":1,"jsonrpc":"2.0"}' | jq -r ".result"  | xargs -I {} printf "eth_chainId:%d\n" {}
+    curl -s http://gateway-node:8547 -X POST -H "Content-Type: application/json" \
+      --data '{"method":"eth_syncing","params":[],"id":1,"jsonrpc":"2.0"}' | jq -r ".result" | xargs -I {} echo "eth_syncing:{}"
+    curl -s http://gateway-node:8547 -X POST -H "Content-Type: application/json" \
+      --data '{"method":"eth_blockNumber","params":[],"id":1,"jsonrpc":"2.0"}' | jq -r ".result" | xargs -I {} printf "eth_blockNumber:%d\n" {}
+ethWallet:
+  enabled: true
+  image:
+    # Public image
+    # repository: ghcr.io/foundry-rs/foundry
+    # tag: latest
+    # Private secure image
+    repository: hub.zama.ai/zama-protocol/zama-ai/security-hub/infra/eth-foundry
+    tag: 0.3.1
+  script: |
+    echo "Check KMS Connector wallet"
+    cast wallet address --private-key $KMS_CONNECTOR_PRIVATE_KEY
+  secret:
+    name: connector-wallet-keys
+    key: kms_txsender.private_key
+kubectl:
+  enabled: true
+  image:
+    # Public image
+    # repository: cgr.dev/chainguard/kubectl
+    # tag: latest-dev
+    # Private secure image
+    repository: hub.zama.ai/zama-protocol/zama.ai/kubectl
+    tag: 1.34-dev
+  script: |
+    echo "Kubernetes namespace check"
+    kubectl get all
+postgres:
+  enabled: true
+  image:
+    # Public image
+    # repository: cgr.dev/chainguard/postgres
+    # tag: latest-dev
+    # Private secure image
+    repository: hub.zama.ai/zama-protocol/zama.ai/postgres
+    tag: 17-dev
+  script: |
+    echo "RDS Postgres check"
+    echo "List all databases of RDS Instance: $DATABASE_ENDPOINT"
+    psql $DATABASE_URL -c "\l"
+    echo "List all tables of RDS Database: DATABASE_ENDPOINT"
+    psql $DATABASE_URL -c "\dt"
+kmsCoreClient:
+  enabled: true
+  image:
+    repository: hub.zama.ai/zama-protocol/zama-ai/kms/core-client
+    # TODO replace by a release version of kms/core-client that include the kms-health-check binary
+    tag: 44a41b4-dev
+  configmap:
+    # Need to match the kms-core helm chart configmap (containing kms-server.toml and vaults.toml)
+    name: kms-core-config
+  script: |
+    echo "KMS-Core health check"
+    kms-health-check full --endpoint kms-core:50100 --config kms-server.toml
+# If kmsCoreClient is disabled, the job will use the kubeUtils image which has curl, jq, socat and grpc-health-probe installed
+utils:
+  image:
+    # Public image
+    # repository: cgr.dev/chainguard/curl
+    # tag: latest-dev
+    # Private secure image
+    repository: hub.zama.ai/zama-protocol/zama-ai/security-hub/infra/kube-utils
+    tag: 0.4.0-safe
+  script: |
+    echo "Kube Utils check"
+    curl ifconfig.me
+  # tail -f /dev/null
+job:
+  ttlSecondsAfterFinished: 300
+
+# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets:
+  - name: registry-credentials
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  create: false
+  annotations: {}
+  name: "mpc-party"
+
+configmap:
+  name: "mpc-party"
+
+# This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+podAnnotations: {}
+# This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+podSecurityContext: {}
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+nodeSelector: {}
+
+# By default, schedule on the terraform-mpc-modules enclave node group
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: "node.kubernetes.io/enclave-enabled"
+              operator: In
+              values:
+                - "true"
+tolerations:
+  - key: "node.kubernetes.io/enclave-enabled"
+    effect: NoSchedule
+    operator: Equal
+    value: "true"
