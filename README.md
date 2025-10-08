@@ -50,7 +50,7 @@ To select a kubernetes cluster:
 ### Provisioning secrets
 
 ##### Registry credentials from hub.zama.ai
-    
+
     export DOCKER_USERNAME=robot-zama-protocol+***
     export DOCKER_PASSWORD=***
     kubectl create secret docker-registry registry-credentials --docker-server=https://hub.zama.ai --docker-username=$DOCKER_USERNAME--docker-password=$DOCKER_PASSWORD
@@ -72,12 +72,10 @@ To select a kubernetes cluster:
     export DATABASE_USERNAME='***' # # To retrieve from Terraform outputs (eg. kmsconnector)
     export DATABASE_PASSWORD='***' # To retrieve from AWS Secrets Manager (
 
-    # The database password must be URL encoded as it can contain special characters.
-    # See https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS
     kubectl create secret generic connector-database \
         --from-literal=endpoint=$DATABASE_ENDPOINT \
         --from-literal=username=$DATABASE_USERNAME \
-        --from-literal=password=$(printf "%s" "$DATABASE_PASSWORD" |jq -sRr @uri)
+        --from-literal=password=$DATABASE_PASSWORD
 
 #### Connector wallet secret
 
@@ -93,7 +91,7 @@ Create the `kmsconnector-wallet-keys` secret in your cluster, e.g.:
 
 Run the `mpc-operator-check` Helm chart with:
 
-    helm upgrade --install mpc-operator-check oci://hub.zama.ai/zama-protocol/zama-ai/mpc-operator/charts/mpc-operator-check:0.1.0
+    helm upgrade --install mpc-operator-check oci://hub.zama.ai/zama-protocol/zama-ai/mpc-operator/charts/mpc-operator-check:0.3.0
 
 ---
 Steps below are relevant to Key Generation, disregard for now
@@ -116,7 +114,7 @@ Shell into kms-core pod
     kubectl exec -it kms-core-1 -- sh
 
     cd /app/kms/core/service/
-    bin/kms-init --addresses http://mpc-node:50100
+    bin/kms-init --addresses http://kms-core:50100
 
 ## KMS Core Client
 
