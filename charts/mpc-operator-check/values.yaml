@@ -79,7 +79,7 @@ kmsCoreClient:
   image:
     repository: hub.zama.ai/zama-protocol/zama-ai/kms/core-client
     # TODO replace by a release version of kms/core-client that include the kms-health-check binary
-    tag: 44a41b4-dev
+    tag: v0.12.0
   configmap:
     # Need to match the kms-core helm chart configmap (containing kms-server.toml and vaults.toml)
     name: kms-core-config
