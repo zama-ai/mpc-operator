@@ -68,10 +68,12 @@ postgres:
     tag: 17-dev
   script: |
     echo "RDS Postgres check"
-    echo "List all databases of RDS Instance: $DATABASE_ENDPOINT"
+    echo "List all databases of RDS Database: $DATABASE_ENDPOINT"
     psql $DATABASE_URL -c "\l"
     echo "List all tables of RDS Database: DATABASE_ENDPOINT"
     psql $DATABASE_URL -c "\dt"
+    echo "View Table _sqlx_migrations of RDS Database: DATABASE_ENDPOINT"
+    psql "$DATABASE_URL" -c "SELECT version, description, installed_on, success, execution_time FROM _sqlx_migrations ORDER BY version;"
 kmsCoreClient:
   enabled: true
   image:
