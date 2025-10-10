@@ -1,0 +1,118 @@
+fullnameOverride: "gateway-node"
+
+image:
+  repository: offchainlabs/nitro-node
+  tag: v3.6.8-d6c96a5
+
+# https://docs.arbitrum.io/run-arbitrum-node/run-full-node
+customArgs:
+  - "http.addr=0.0.0.0"
+  - "http.corsdomain=*"
+  - "http.vhosts=*"
+  - "http.rpcprefix=/"
+  - "ws.addr=0.0.0.0"
+  - "ws.origins=*"
+  - "ws.rpcprefix=/"
+  - "http.api=net,web3,eth,debug,txpool"
+
+persistence:
+  enabled: true
+  size: 250Gi
+  storageClassName: gp3
+
+extraEnv:
+  # Required to verify the rollup data availability on parent chain
+  - name: NITRO_PARENT-CHAIN_CONNECTION_URL
+    valueFrom:
+      secretKeyRef:
+        name: arbitrum
+        key: arbitrum-sepolia-rpc-url
+  # Required to forward transactions to the sequencer
+  - name: NITRO_EXECUTION_FORWARDING-TARGET
+    valueFrom:
+      secretKeyRef:
+        name: conduit
+        key: conduit-rpc-http-url
+
+# https://docs.arbitrum.io/run-arbitrum-node/run-full-node#minimum-hardware-configuration
+resources:
+  requests:
+    cpu: 2
+    memory: 8Gi
+  limits:
+    cpu: 4
+    memory: 16Gi
+
+configmap:
+  enabled: true
+  data:
+    http:
+      rpcprefix: ""
+    parent-chain:
+      id: 421614
+      connection:
+      # Overridden by env var for authenticated RPC
+      #  url: "https://sepolia-rollup.arbitrum.io/rpc"
+    chain:
+      id: 10901
+      name: conduit-orbit-deployer
+      # Note: {"parent-chain-is-arbitrum": true} added to JSON
+      info-json: '[{"parent-chain-is-arbitrum": true, "chain-id":10901,"parent-chain-id":421614,"chain-name":"conduit-orbit-deployer","chain-config":{"chainId":10901,"homesteadBlock":0,"daoForkBlock":null,"daoForkSupport":true,"eip150Block":0,"eip150Hash":"0x0000000000000000000000000000000000000000000000000000000000000000","eip155Block":0,"eip158Block":0,"byzantiumBlock":0,"constantinopleBlock":0,"petersburgBlock":0,"istanbulBlock":0,"muirGlacierBlock":0,"berlinBlock":0,"londonBlock":0,"clique":{"period":0,"epoch":0},"arbitrum":{"EnableArbOS":true,"AllowDebugPrecompiles":false,"DataAvailabilityCommittee":true,"InitialArbOSVersion":40,"InitialChainOwner":"0x20f9028611a93Aa9e7c33b5E54E0213AF0B29f52","GenesisBlockNum":0}},"rollup":{"bridge":"0x80Fe84709e141F58FA971B2F3Fe04Fe905f35c60","inbox":"0x41Ba31333ADDf810233aDb40b0C58b18320Ca592","sequencer-inbox":"0x4f96104A72d7282daDF7B2d3Bff44E5dBa400FF4","rollup":"0x6d679f12Dc6c65be565126a8B101605912b351De","validator-utils":"0xf4CeeF5CA1a0aFE028E2C9A0F2535BcD599063fC","validator-wallet-creator":"0xdb54B7Eb16aF05Af999DA00100BeBAFf2D8350dD","deployed-at":200763820}}]'
+    execution:
+      # Uncomment to make node an archive node
+      #caching: archive
+      # Overridden by env var for authenticated RPC, see extraEnv section
+      #forwarding-target: "https://rpc-zama-testnet-0.t.conduit.xyz"
+      parent-chain-reader:
+        poll-timeout: 10s
+        poll-interval: 15s
+      forwarder:
+        update-interval: 100ms
+    node:
+      data-availability:
+        enable: true
+        sequencer-inbox-address: "0x4f96104A72d7282daDF7B2d3Bff44E5dBa400FF4"
+        rest-aggregator:
+          enable: true
+          urls:
+            - "https://das-zama-testnet-0.t.conduit.xyz"
+      # Required to pull unfinalized blocks from the sequencer
+      feed:
+        input:
+          url: "wss://relay-zama-testnet-0.t.conduit.xyz"
+      staker:
+        log-query-batch-size: 5000
+#      batch-poster:
+#        data-poster:
+#          # the maximum number of transactions to have queued in the mempool at once (0 = unlimited)
+#          max-mempool-transactions: 0
+#          # the maximum number of weight (weight = min(1, tx.blobs)) to have queued in the mempool at once (0 = unlimited)
+#          max-mempool-weight: 0
+#          # the maximum number of unconfirmed transactions to track at once (0 = unlimited)
+#          max-queued-transactions: 0
+    metrics: true
+
+readinessProbe:
+  enabled: true
+  tcpSocket:
+    port: http-rpc
+
+serviceMonitor:
+  enabled: false
+
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: "node.kubernetes.io/gateway-full-node"
+              operator: In
+              values:
+                - "true"
+
+tolerations:
+  - key: "node.kubernetes.io/gateway-full-node"
+    effect: NoSchedule
+    operator: Equal
+    value: "true"
