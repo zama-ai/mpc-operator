@@ -122,11 +122,10 @@ spec:
             - -c
             - |
               # Substitute env vars into kms-server.toml
-              export KMS_CORE__THRESHOLD__MY_ID=${KMS_CORE__THRESHOLD__MY_ID:=1}
               envsubst < /chart-config/kms-server.toml > /config/kms-server.toml
               envsubst < /chart-config/vaults.toml >> /config/kms-server.toml
               # Fetch KMS Signer address from KMS Public bucket
-              curl -sS "${CORE_CLIENT__S3_ENDPOINT}${KMS_CORE__PRIVATE_VAULT__STORAGE__S3__PREFIX}/PUB-p1/VerfAddress/60b7070add74be3827160aa635fb255eeeeb88586c4debf7ab1134ddceb4beee" > /config/kms-signer-address
+              curl -sS "${CORE_CLIENT__S3_ENDPOINT}${KMS_CORE__PRIVATE_VAULT__STORAGE__S3__PREFIX}/PUB-p${KMS_CORE__THRESHOLD__MY_ID}/VerfAddress/60b7070add74be3827160aa635fb255eeeeb88586c4debf7ab1134ddceb4beee" > /config/kms-signer-address
           envFrom:
             - configMapRef:
                 name: {{ .Values.configmap.name }}

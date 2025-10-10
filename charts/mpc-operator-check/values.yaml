@@ -58,7 +58,7 @@ kubectl:
     echo "Kubernetes namespace check"
     kubectl get all
 postgres:
-  enabled: true
+  enabled: false
   image:
     # Public image
     # repository: cgr.dev/chainguard/postgres
