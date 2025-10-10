@@ -31,6 +31,6 @@ releases:
   - name: kms-connector
     namespace: kms-decentralized
     chart: zama-fhevm/kms-connector
-    version: 1.0.0
+    version: 1.1.0
     values:
       - helm-values/kms-connector.yaml
