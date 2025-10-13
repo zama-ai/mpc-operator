@@ -126,6 +126,8 @@ spec:
               envsubst < /chart-config/vaults.toml >> /config/kms-server.toml
               # Fetch KMS Signer address from KMS Public bucket
               curl -sS "${CORE_CLIENT__S3_ENDPOINT}${KMS_CORE__PRIVATE_VAULT__STORAGE__S3__PREFIX}/PUB-p${KMS_CORE__THRESHOLD__MY_ID}/VerfAddress/60b7070add74be3827160aa635fb255eeeeb88586c4debf7ab1134ddceb4beee" > /config/kms-signer-address
+              # Copy enclave config to config workdir
+              cp /chart-config/enclave.json /config/enclave.json
           envFrom:
             - configMapRef:
                 name: {{ .Values.configmap.name }}
@@ -174,6 +176,8 @@ spec:
           configMap:
             name: {{ .Values.kmsCoreClient.configmap.name }}
             items:
+              - key: enclave.json
+                path: enclave.json
               - key: kms-server.toml
                 path: kms-server.toml
               - key: vaults.toml

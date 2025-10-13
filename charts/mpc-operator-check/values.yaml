@@ -57,6 +57,9 @@ kubectl:
   script: |
     echo "Kubernetes namespace check"
     kubectl get all
+    echo "=================================================="
+    echo "Kubernetes enclave nodes check"
+    kubectl describe node -l node.kubernetes.io/enclave-enabled=true
 postgres:
   enabled: false
   image:
@@ -84,7 +87,13 @@ kmsCoreClient:
     # Need to match the kms-core helm chart configmap (containing kms-server.toml and vaults.toml)
     name: kms-core-config
   script: |
-    echo "KMS-Core health check"
+    echo "KMS-Core kms-server.toml"
+    cat kms-server.toml
+    echo "=================================================="
+    echo "KMS-Core enclave config content"
+    cat enclave.json
+    echo "=================================================="
+    echo "KMS-Core health check\n----"
     kms-health-check full --endpoint kms-core:50100 --config kms-server.toml
 # If kmsCoreClient is disabled, the job will use the kubeUtils image which has curl, jq, socat and grpc-health-probe installed
 utils:
