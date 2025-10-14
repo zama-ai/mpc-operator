@@ -58,6 +58,9 @@ kubectl:
     echo "Kubernetes namespace check"
     kubectl get all
     echo "=================================================="
+    echo "Kubernetes container docker image versions check"
+    kubectl get pods -o=jsonpath='{range .items[*]}{.metadata.name}{"\t"}{range .spec.containers[*]}{.image}{" "}{end}{"\n"}{end}'
+    echo "=================================================="
     echo "Kubernetes enclave nodes check"
     kubectl describe node -l node.kubernetes.io/enclave-enabled=true
 postgres:

@@ -146,6 +146,8 @@ spec:
             - -c
             - |
               echo "=================================================="
+              echo "Executing {{ .Chart.Name }}:{{ .Chart.Version }}
+              echo "=================================================="
               {{- .Values.kmsCoreClient.script | nindent 14 }}
               if [[ ! $KMS_CORE__THRESHOLD__MY_ID =~ ^-?[0-9]+$ ]]; then
                 echo "Error: $KMS_CORE__THRESHOLD__MY_ID must be an integer, got: '$KMS_CORE__THRESHOLD__MY_ID'"
