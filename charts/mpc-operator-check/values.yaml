@@ -96,8 +96,9 @@ kmsCoreClient:
     echo "KMS-Core enclave config content"
     cat enclave.json
     echo "=================================================="
-    echo "KMS-Core health check\n----"
+    echo "KMS-Core health check"
     kms-health-check full --endpoint kms-core:50100 --config kms-server.toml
+
 # If kmsCoreClient is disabled, the job will use the kubeUtils image which has curl, jq, socat and grpc-health-probe installed
 utils:
   image:
