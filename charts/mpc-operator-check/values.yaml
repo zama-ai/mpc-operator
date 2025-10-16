@@ -64,7 +64,7 @@ kubectl:
     echo "Kubernetes enclave nodes check"
     kubectl describe node -l node.kubernetes.io/enclave-enabled=true
 postgres:
-  enabled: false
+  enabled: true
   image:
     # Public image
     # repository: cgr.dev/chainguard/postgres
@@ -84,8 +84,7 @@ kmsCoreClient:
   enabled: true
   image:
     repository: hub.zama.ai/zama-protocol/zama-ai/kms/core-client
-    # TODO replace by a release version of kms/core-client that include the kms-health-check binary
-    tag: v0.12.0
+    tag: v0.12.1
   configmap:
     # Need to match the kms-core helm chart configmap (containing kms-server.toml and vaults.toml)
     name: kms-core-config
@@ -98,7 +97,20 @@ kmsCoreClient:
     echo "=================================================="
     echo "KMS-Core health check"
     kms-health-check full --endpoint kms-core:50100 --config kms-server.toml
-
+netcat:
+  enabled: true
+  image:
+    # Private secure image
+    repository: hub.zama.ai/zama-protocol/zama.ai/netcat
+    tag: 1-dev
+  script: |
+    echo "MPC Nodes Netcat Connection check"
+    for i in $(seq 1 13)
+    do
+      echo "====================== mpc-node-$i ======================"
+      nc -vz -w 1 mpc-node-$i 50001
+      nc -vz -w 1 mpc-node-$i 9646
+    done
 # If kmsCoreClient is disabled, the job will use the kubeUtils image which has curl, jq, socat and grpc-health-probe installed
 utils:
   image:

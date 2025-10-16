@@ -113,6 +113,17 @@ spec:
             - name: DATABASE_URL
               value: "postgresql://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@$(DATABASE_ENDPOINT)/kmsconnector"
         {{- end }}
+        {{- if .Values.netcat.enabled }}
+        - name: netcat-check
+          image: {{ .Values.netcat.image.repository }}:{{ .Values.netcat.image.tag }}
+          imagePullPolicy: Always
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=================================================="
+              {{- .Values.netcat.script | nindent 14 }}
+        {{- end }}
         {{- if .Values.kmsCoreClient.enabled }}
         - name: kms-config
           image: {{ .Values.utils.image.repository }}:{{ .Values.utils.image.tag }}
