@@ -7,7 +7,7 @@ kmsCore:
   nameOverride: kms-core
   image:
     name: hub.zama.ai/zama-protocol/zama-ai/kms/core-service-enclave
-    tag: v0.12.0
+    tag: v0.12.1
   serviceAccountName: mpc-party
   envFrom:
     configmap:
@@ -102,7 +102,7 @@ kmsCoreClient:
   nameOverride: kms-client
   image:
     name: hub.zama.ai/zama-protocol/zama-ai/kms/core-client
-    tag: v0.12.0
+    tag: v0.12.1
   envFrom:
     configmap:
       name: mpc-party
