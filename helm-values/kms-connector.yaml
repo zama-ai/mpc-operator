@@ -1,11 +1,11 @@
 commonConfig:
   databaseUrl: "postgresql://$(DATABASE_ENDPOINT)/kmsconnector"
-  gatewayUrl: "ws://gateway-node:8548"
+  gatewayUrl: "http://gateway-node:8547"
   chainId: "10901"
   gatewayContractAddresses:
-    decryption: "TODO"
-    gatewayConfig: "TODO"
-    kmsManagement: "TODO"
+    decryption: "0x5D8BD78e2ea6bbE41f26dFe9fdaEAa349e077478"
+    gatewayConfig: "0x94153006067B89399e059284f5a7Fe016940E332"
+    kmsGeneration: "0x5779Ac320BbDB267Cc4d1b77195a203F926bBC60"
   env:
     - name: DATABASE_ENDPOINT
       valueFrom:
@@ -31,7 +31,8 @@ kmsConnectorDbMigration:
   enabled: true
   image:
     name: hub.zama.ai/zama-protocol/zama-ai/fhevm/kms-connector/db-migration
-    tag: v0.9.1
+    tag: v0.9.3
+  env: []
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -52,7 +53,7 @@ kmsConnectorGwListener:
   nameOverride: kms-connector-gw-listener
   image:
     name: hub.zama.ai/zama-protocol/zama-ai/fhevm/kms-connector/gw-listener
-    tag: v0.9.1
+    tag: v0.9.3
   replicas: 1
   affinity:
     nodeAffinity:
@@ -74,7 +75,7 @@ kmsConnectorKmsWorker:
   nameOverride: kms-connector-kms-worker
   image:
     name: hub.zama.ai/zama-protocol/zama-ai/fhevm/kms-connector/kms-worker
-    tag: v0.9.1
+    tag: v0.9.3
   replicas: 1
   config:
     kmsCoreEndpoints: "http://kms-core:50100"
@@ -98,7 +99,7 @@ kmsConnectorTxSender:
   nameOverride: kms-connector-tx-sender
   image:
     name: hub.zama.ai/zama-protocol/zama-ai/fhevm/kms-connector/tx-sender
-    tag: v0.9.1
+    tag: v0.9.3
   replicas: 1
   wallet:
     secret:
