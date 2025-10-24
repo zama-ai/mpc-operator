@@ -63,6 +63,12 @@ kubectl:
     echo "=================================================="
     echo "Kubernetes enclave nodes check"
     kubectl describe node -l node.kubernetes.io/enclave-enabled=true
+    echo "Check kms-core logs"
+    kubectl logs -l app=kms-core --prefix -c kms-core-enclave-logger
+    echo "Check kms-connector logs"
+    kubectl logs -l app=kms-connector-gw-listener --prefix
+    kubectl logs -l app=kms-connector-kms-worker --prefix
+    kubectl logs -l app=kms-connector-tx-sender --prefix
 postgres:
   enabled: true
   image:
