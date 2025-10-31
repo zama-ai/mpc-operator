@@ -6,7 +6,7 @@ kmsCore:
   enabled: true
   nameOverride: kms-core
   image:
-    name: hub.zama.ai/zama-protocol/zama-ai/kms/core-service-enclave
+    name: hub.zama.org/zama-protocol/zama-ai/kms/core-service-enclave
     tag: v0.12.1
   serviceAccountName: mpc-party
   envFrom:
@@ -101,7 +101,7 @@ kmsCoreClient:
   enabled: true
   nameOverride: kms-client
   image:
-    name: hub.zama.ai/zama-protocol/zama-ai/kms/core-client
+    name: hub.zama.org/zama-protocol/zama-ai/kms/core-client
     tag: v0.12.1
   envFrom:
     configmap:
@@ -109,7 +109,7 @@ kmsCoreClient:
 
 kubeUtils:
   image:
-    name: hub.zama.ai/zama-protocol/zama-ai/security-hub/infra/kube-utils
+    name: hub.zama.org/zama-protocol/zama-ai/security-hub/infra/kube-utils
     tag: v0.4.0
 
 rustLog: info

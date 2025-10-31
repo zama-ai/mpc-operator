@@ -30,7 +30,7 @@ commonConfig:
 kmsConnectorDbMigration:
   enabled: true
   image:
-    name: hub.zama.ai/zama-protocol/zama-ai/fhevm/kms-connector/db-migration
+    name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/db-migration
     tag: v0.9.3
   env: []
   affinity:
@@ -52,7 +52,7 @@ kmsConnectorGwListener:
   enabled: true
   nameOverride: kms-connector-gw-listener
   image:
-    name: hub.zama.ai/zama-protocol/zama-ai/fhevm/kms-connector/gw-listener
+    name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/gw-listener
     tag: v0.9.3
   replicas: 1
   affinity:
@@ -74,7 +74,7 @@ kmsConnectorKmsWorker:
   enabled: true
   nameOverride: kms-connector-kms-worker
   image:
-    name: hub.zama.ai/zama-protocol/zama-ai/fhevm/kms-connector/kms-worker
+    name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/kms-worker
     tag: v0.9.3
   replicas: 1
   config:
@@ -98,7 +98,7 @@ kmsConnectorTxSender:
   enabled: true
   nameOverride: kms-connector-tx-sender
   image:
-    name: hub.zama.ai/zama-protocol/zama-ai/fhevm/kms-connector/tx-sender
+    name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/tx-sender
     tag: v0.9.3
   replicas: 1
   wallet:

@@ -5,7 +5,7 @@ awsCli:
     # repository: amazon/aws-cli
     # tag: 2.30.1
     # Private secure image
-    repository: hub.zama.ai/zama-protocol/zama.ai/aws-cli
+    repository: hub.zama.org/zama-protocol/zama.ai/aws-cli
     tag: "2.30-dev"
   script: |
     echo "AWS check"
@@ -20,7 +20,7 @@ gatewayNode:
     # repository: cgr.dev/chainguard/curl
     # tag: latest-dev
     # Private secure image
-    repository: hub.zama.ai/zama-protocol/zama-ai/security-hub/infra/kube-utils
+    repository: hub.zama.org/zama-protocol/zama-ai/security-hub/infra/kube-utils
     tag: v0.4.0
   script: |
     echo "Gateway Node checks"
@@ -37,7 +37,7 @@ ethWallet:
     # repository: ghcr.io/foundry-rs/foundry
     # tag: latest
     # Private secure image
-    repository: hub.zama.ai/zama-protocol/zama-ai/security-hub/infra/eth-foundry
+    repository: hub.zama.org/zama-protocol/zama-ai/security-hub/infra/eth-foundry
     tag: 0.3.1
   script: |
     echo "Check KMS Connector wallet"
@@ -52,7 +52,7 @@ kubectl:
     # repository: cgr.dev/chainguard/kubectl
     # tag: latest-dev
     # Private secure image
-    repository: hub.zama.ai/zama-protocol/zama.ai/kubectl
+    repository: hub.zama.org/zama-protocol/zama.ai/kubectl
     tag: 1.34-dev
   script: |
     echo "Kubernetes namespace check"
@@ -76,7 +76,7 @@ postgres:
     # repository: cgr.dev/chainguard/postgres
     # tag: latest-dev
     # Private secure image
-    repository: hub.zama.ai/zama-protocol/zama.ai/postgres
+    repository: hub.zama.org/zama-protocol/zama.ai/postgres
     tag: 17-dev
   script: |
     echo "RDS Postgres check"
@@ -89,7 +89,7 @@ postgres:
 kmsCoreClient:
   enabled: true
   image:
-    repository: hub.zama.ai/zama-protocol/zama-ai/kms/core-client
+    repository: hub.zama.org/zama-protocol/zama-ai/kms/core-client
     tag: v0.12.1
   configmap:
     # Need to match the kms-core helm chart configmap (containing kms-server.toml and vaults.toml)
@@ -107,7 +107,7 @@ netcat:
   enabled: true
   image:
     # Private secure image
-    repository: hub.zama.ai/zama-protocol/zama.ai/netcat
+    repository: hub.zama.org/zama-protocol/zama.ai/netcat
     tag: 1-dev
   script: |
     echo "MPC Nodes Netcat Connection check"
@@ -124,7 +124,7 @@ utils:
     # repository: cgr.dev/chainguard/curl
     # tag: latest-dev
     # Private secure image
-    repository: hub.zama.ai/zama-protocol/zama-ai/security-hub/infra/kube-utils
+    repository: hub.zama.org/zama-protocol/zama-ai/security-hub/infra/kube-utils
     tag: 0.4.0-safe
   script: |
     echo "Kube Utils check"
