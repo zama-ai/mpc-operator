@@ -2,4 +2,4 @@ apiVersion: v2
 name: mpc-operator-check
 description: A Helm chart to execute the MPC-Operator check Job
 type: application
-version: 1.2.0
+version: 1.2.1

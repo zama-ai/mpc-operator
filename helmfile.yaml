@@ -5,13 +5,13 @@
 # export ZAMA_FHEVM_PASSWORD=***
 repositories:
   - name: hub-zama
-    url: hub.zama.ai/zama-protocol
+    url: hub.zama.org/zama-protocol
     oci: true
   - name: zama-kms
-    url: hub.zama.ai/zama-protocol/zama-ai/kms/charts
+    url: hub.zama.org/zama-protocol/zama-ai/kms/charts
     oci: true
   - name: zama-fhevm
-    url: hub.zama.ai/zama-protocol/zama-ai/fhevm/charts
+    url: hub.zama.org/zama-protocol/zama-ai/fhevm/charts
     oci: true
   - name: arbitrum
     url: https://charts.arbitrum.io
