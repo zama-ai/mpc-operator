@@ -1,0 +1,121 @@
+{{- if .Values.mpcOperatorCheck.kmsKeys.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mpc-operator-check-kms-keys
+  annotations:
+    "helm.sh/hook": "pre-install,pre-upgrade"
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: 0
+  completionMode: Indexed
+  backoffLimitPerIndex: 1
+  maxFailedIndexes: 1
+  ttlSecondsAfterFinished: {{ .Values.job.ttlSecondsAfterFinished | int }}
+  template:
+    metadata:
+      labels:
+        app: mpc-operator-check
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}-connector
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: run-kms-cert-check
+          image: {{ .Values.kmsCoreClient.image.repository }}:{{ .Values.kmsCoreClient.image.tag }}
+          imagePullPolicy: Always
+          workingDir: /config
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=================================================="
+              echo "Executing {{ .Chart.Name }}:{{ .Chart.Version }}"
+              echo "=================================================="
+              echo "Check KMS Core #${KMS_CORE__THRESHOLD__MY_ID} Certificate"
+              echo "=================================================="
+              wget -nv -O certificate.crt "${CORE_CLIENT__S3_ENDPOINT}${KMS_CORE__PRIVATE_VAULT__STORAGE__S3__PREFIX}/PUB-p${KMS_CORE__THRESHOLD__MY_ID}/CACert/60b7070add74be3827160aa635fb255eeeeb88586c4debf7ab1134ddceb4beee"
+              openssl x509 -in certificate.crt -text -noout
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.configmap.name }}
+          volumeMounts:
+            - name: config
+              mountPath: /config
+        - name: eth-wallet-check
+          image: {{ .Values.ethWallet.image.repository }}:{{ .Values.ethWallet.image.tag }}
+          imagePullPolicy: Always
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=================================================="
+              cast wallet address --aws > /config/connector-wallet-address
+              {{- .Values.ethWallet.script | nindent 14 }}
+          env:
+            - name: AWS_KMS_KEY_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.configmap.name }}
+                  key: KMS_CONNECTOR__TX_SENDER_AWS_KMS_KEY_ID
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      containers:
+        - name: kube-utils
+          image: {{ .Values.ethWallet.image.repository }}:{{ .Values.ethWallet.image.tag }}
+          imagePullPolicy: Always
+          workingDir: /config
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=================================================="
+              if [[ ! $KMS_CORE__THRESHOLD__MY_ID =~ ^-?[0-9]+$ ]]; then
+                echo "Error: ${KMS_CORE__THRESHOLD__MY_ID} must be an integer, got: '${KMS_CORE__THRESHOLD__MY_ID}'"
+                exit 1
+              fi
+              if [[ -z "kms-signer-address" ]]; then
+                echo "Error: cannot get KMS signer address, ensure it is created in the public bucket VerfAddress folder"
+                exit 1
+              fi
+              echo "Gateway Contract Configuration for Party #${KMS_CORE__THRESHOLD__MY_ID} (to share with Zama Governance)"
+              echo "KMS_NODE_STORAGE_URL_${KMS_CORE__THRESHOLD__MY_ID}=${CORE_CLIENT__S3_ENDPOINT}"
+              # Fetch KMS Signer address from KMS Public bucket
+              curl -sS "${CORE_CLIENT__S3_ENDPOINT}${KMS_CORE__PRIVATE_VAULT__STORAGE__S3__PREFIX}/PUB-p${KMS_CORE__THRESHOLD__MY_ID}/VerfAddress/60b7070add74be3827160aa635fb255eeeeb88586c4debf7ab1134ddceb4beee" > /config/kms-signer-address
+              echo "KMS_SIGNER_ADDRESS_${KMS_CORE__THRESHOLD__MY_ID}=$(cat /config/kms-signer-address)"
+              if [[ -z "connector-wallet-address" ]]; then
+                echo "Error: cannot get connector wallet address, ensure the KMS-Connector Eth wallet is created in AWS KMS Key ID: ${KMS_CONNECTOR__TX_SENDER_AWS_KMS_KEY_ID}"
+                exit 1
+              fi
+              echo "KMS_TX_SENDER_ADDRESS_${KMS_CORE__THRESHOLD__MY_ID}=$(cat /config/connector-wallet-address)"
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.configmap.name }}
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      volumes:
+        - name: config
+          emptyDir: {}
+      restartPolicy: Never
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

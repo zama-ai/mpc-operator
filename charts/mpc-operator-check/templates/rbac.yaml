@@ -1,4 +1,4 @@
-{{- if .Values.kubectl.enabled }}
+{{- if and .Values.kubectl.enabled (or .Values.mpcOperatorCheck.kmsCore.enabled .Values.mpcOperatorCheck.kmsConnector.enabled)}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -21,9 +21,16 @@ metadata:
     "helm.sh/hook-weight": "-1"
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 subjects:
+  {{- if .Values.mpcOperatorCheck.kmsCore.enabled }}
   - kind: ServiceAccount
     name: {{ .Values.serviceAccount.name }}
     namespace: {{ .Release.Namespace }}
+  {{- end }}
+  {{- if .Values.mpcOperatorCheck.kmsConnector.enabled }}
+  - kind: ServiceAccount
+    name: {{ .Values.serviceAccount.name }}-connector
+    namespace: {{ .Release.Namespace }}
+  {{- end }}
 roleRef:
   kind: ClusterRole
   name: mpc-operator-check-resource-reader

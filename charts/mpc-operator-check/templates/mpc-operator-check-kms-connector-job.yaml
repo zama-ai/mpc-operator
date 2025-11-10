@@ -1,0 +1,106 @@
+{{- if .Values.mpcOperatorCheck.kmsConnector.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mpc-operator-check-kms-connector
+  annotations:
+    "helm.sh/hook": "pre-install,pre-upgrade"
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: 0
+  completionMode: Indexed
+  backoffLimitPerIndex: 1
+  maxFailedIndexes: 1
+  ttlSecondsAfterFinished: {{ .Values.job.ttlSecondsAfterFinished | int }}
+  template:
+    metadata:
+      labels:
+        app: mpc-operator-check
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}-connector
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- if .Values.gatewayNode.enabled }}
+        - name: gateway-node-check
+          image: {{ .Values.gatewayNode.image.repository }}:{{ .Values.gatewayNode.image.tag }}
+          imagePullPolicy: Always
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=================================================="
+              {{- .Values.gatewayNode.script | nindent 14 }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.configmap.name }}
+        {{- end }}
+        {{- if .Values.postgres.enabled }}
+        - name: postgres-check
+          image: {{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}
+          imagePullPolicy: Always
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=================================================="
+              {{- .Values.postgres.script | nindent 14 }}
+          env:
+            - name: DATABASE_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: connector-database
+                  key: endpoint
+            - name: DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: connector-database
+                  key: username
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: connector-database
+                  key: password
+            - name: DATABASE_URL
+              value: "postgresql://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@$(DATABASE_ENDPOINT)/kmsconnector"
+        {{- end }}
+      containers:
+        - name: kube-utils
+          image: {{ .Values.ethWallet.image.repository }}:{{ .Values.ethWallet.image.tag }}
+          imagePullPolicy: Always
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=================================================="
+              echo "Check kms-connector services /healthz endpoint"
+              curl kms-connector-gw-listener:9100/healtz
+              curl kms-connector-kms-worker:9100/healtz
+              curl kms-connector-tx-sender:9100/healtz
+              echo "=================================================="
+              echo "Check kms-connector logs"
+              kubectl logs -l app=kms-connector-gw-listener --prefix
+              kubectl logs -l app=kms-connector-kms-worker --prefix
+              kubectl logs -l app=kms-connector-tx-sender --prefix
+
+      restartPolicy: Never
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
