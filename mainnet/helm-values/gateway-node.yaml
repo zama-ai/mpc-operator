@@ -1,0 +1,104 @@
+image:
+  repository: offchainlabs/nitro-node
+  tag: v3.7.6-c0fe95e
+
+# https://docs.arbitrum.io/run-arbitrum-node/run-full-node
+customArgs:
+  - "http.addr=0.0.0.0"
+  - "http.corsdomain=*"
+  - "http.vhosts=*"
+  - "http.rpcprefix=/"
+  - "ws.addr=0.0.0.0"
+  - "ws.origins=*"
+  - "ws.rpcprefix=/"
+  - "http.api=net,web3,eth,debug,txpool"
+
+persistence:
+  enabled: true
+  size: 250Gi
+  storageClassName: gp3
+
+extraEnv:
+  # Required to verify the rollup data availability on parent chain
+  # A paid arbitrum RPC provider such as Quicknode or Alchemy is suggested
+  # Should be stored in a secret
+  - name: NITRO_PARENT-CHAIN_CONNECTION_URL
+    valueFrom:
+      secretKeyRef:
+        name: arbitrum
+        key: arbitrum-rpc-url
+  #  # Required to forward transactions to the sequencer (get it from zama)
+  - name: NITRO_EXECUTION_FORWARDING-TARGET
+    valueFrom:
+      secretKeyRef:
+        name: conduit
+        key: conduit-rpc-http-url
+
+# https://docs.arbitrum.io/run-arbitrum-node/run-full-node#minimum-hardware-configuration
+resources:
+  requests:
+    cpu: 2
+    memory: 8Gi
+  limits:
+    cpu: 4
+    memory: 16Gi
+
+# It's recommended to run the full-node on a dedicated node
+# by specifying a nodeSelector and tolerations
+#nodeSelector:
+#  karpenter.sh/nodepool: custom-node-pool
+
+#tolerations:
+#  - key: karpenter.sh/nodepool
+#    effect: NoSchedule
+#    operator: Equal
+#    value: custom-node-pool
+
+configmap:
+  enabled: true
+  data:
+    http:
+      rpcprefix: ""
+    parent-chain:
+      id: 42161
+      connection:
+      # Overridden by env var for authenticated RPC, see extraEnv section
+      # Public RPCs: https://chainlist.org/?chain=42161&search=arbitrum
+      # However, they will usually return 429 Too Many Requests
+      #url: "https://arb1.arbitrum.io/rpc"
+    chain:
+      id: 261131
+      name: conduit-orbit-deployer
+      # Note: {"parent-chain-is-arbitrum": true} added to JSON
+      info-json: '[{"parent-chain-is-arbitrum": true, "chain-id":261131,"parent-chain-id":42161,"chain-name":"conduit-orbit-deployer","chain-config":{"chainId":261131,"homesteadBlock":0,"daoForkBlock":null,"daoForkSupport":true,"eip150Block":0,"eip150Hash":"0x0000000000000000000000000000000000000000000000000000000000000000","eip155Block":0,"eip158Block":0,"byzantiumBlock":0,"constantinopleBlock":0,"petersburgBlock":0,"istanbulBlock":0,"muirGlacierBlock":0,"berlinBlock":0,"londonBlock":0,"clique":{"period":0,"epoch":0},"arbitrum":{"EnableArbOS":true,"AllowDebugPrecompiles":false,"DataAvailabilityCommittee":true,"InitialArbOSVersion":40,"InitialChainOwner":"0xe27Bf67F0D2169B757267Ae5a1A27f91FD6660b8","GenesisBlockNum":0}},"rollup":{"bridge":"0xB95b70f48C9F45293d1EE6670d0C5D8D4F045e46","inbox":"0x893a8A0d0FC49cEA7d27dac7E5Ab760639A041C7","sequencer-inbox":"0xAe7B43ec6f8d0EccebB7879Ddc42dab57b75654D","rollup":"0xdC10dD8E1Ff27563c1721f0B0aBc55d3e8e100d4","validator-utils":"0x08Ca9925b88c54100568c8d41eFAF8Fecc695d3a","validator-wallet-creator":"0x27a722f5Ba1E7119a48A990eE5C262413249eB2B","deployed-at":391581390}}]'
+    execution:
+      # Overridden by env var for authenticated RPC
+      #forwarding-target: "https://rpc-zama-gateway-mainnet.t.conduit.xyz"
+      parent-chain-reader:
+        poll-timeout: 10s
+        poll-interval: 15s
+      forwarder:
+        update-interval: 100ms
+    node:
+      data-availability:
+        enable: true
+        sequencer-inbox-address: "0xAe7B43ec6f8d0EccebB7879Ddc42dab57b75654D"
+        rest-aggregator:
+          enable: true
+          urls:
+            - "https://das-zama-gateway-mainnet.t.conduit.xyz"
+      # Required to pull unfinalized blocks from the sequencer
+      feed:
+        input:
+          url: "wss://relay-zama-gateway-mainnet.t.conduit.xyz"
+      staker:
+        log-query-batch-size: 5000
+    metrics: true
+
+readinessProbe:
+  enabled: true
+  tcpSocket:
+    port: http-rpc
+
+startupProbe:
+  enabled: false

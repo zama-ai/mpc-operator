@@ -1,3 +1,6 @@
+kmsPeers:
+  id: 1
+
 kmsGenCertAndKeys:
   nameOverride: kms-gen-cert-and-keys
   enabled: true
@@ -6,8 +9,8 @@ kmsCore:
   enabled: true
   nameOverride: kms-core
   image:
-    name: hub.zama.ai/zama-protocol/zama-ai/kms/core-service-enclave
-    tag: v0.12.1
+    name: hub.zama.org/zama-protocol/zama-ai/kms/core-service-enclave
+    tag: v0.12.4
   serviceAccountName: mpc-party
   envFrom:
     configmap:
@@ -58,10 +61,6 @@ kmsCore:
         port: 50001
   nitroEnclave:
     enabled: true
-    # Enclave CPU count, must be a multiple of 2 since whole cores (not hyperthreads) are sliced off and dedicated to the enclave
-    cpuCount: 72
-    # Enclave Memory in GiB
-    memoryGiB: 120
   aws:
     region: eu-west-1
   affinity:
@@ -101,15 +100,15 @@ kmsCoreClient:
   enabled: true
   nameOverride: kms-client
   image:
-    name: hub.zama.ai/zama-protocol/zama-ai/kms/core-client
-    tag: v0.12.1
+    name: hub.zama.org/zama-protocol/zama-ai/kms/core-client
+    tag: v0.12.4
   envFrom:
     configmap:
       name: mpc-party
 
 kubeUtils:
   image:
-    name: hub.zama.ai/zama-protocol/zama-ai/security-hub/infra/kube-utils
+    name: hub.zama.org/zama-protocol/zama-ai/security-hub/infra/kube-utils
     tag: v0.4.0
 
 rustLog: info

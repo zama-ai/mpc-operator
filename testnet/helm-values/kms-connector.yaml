@@ -1,6 +1,8 @@
 commonConfig:
   databaseUrl: "postgresql://$(DATABASE_ENDPOINT)/kmsconnector"
-  gatewayUrl: "http://gateway-node:8547"
+  gatewayUrl: "$(CONDUIT_RPC_HTTP_URL)"
+  # Cannot be used for tx-sender until full node supports eth_sendRawTransactionSync
+  #gatewayUrl: "http://gateway-node:8547"
   chainId: "10901"
   gatewayContractAddresses:
     decryption: "0x5D8BD78e2ea6bbE41f26dFe9fdaEAa349e077478"
@@ -22,16 +24,17 @@ commonConfig:
         secretKeyRef:
           name: connector-database
           key: password
-    - name: KMS_CONNECTOR_DECRYPTION_POLLING_MS
-      value: "500"
-    - name: KMS_CONNECTOR_GAS_MULTIPLIER_PERCENT
-      value: "300"
+    - name: CONDUIT_RPC_HTTP_URL
+      valueFrom:
+        secretKeyRef:
+          name: conduit
+          key: conduit-rpc-http-url
 
 kmsConnectorDbMigration:
   enabled: true
   image:
-    name: hub.zama.ai/zama-protocol/zama-ai/fhevm/kms-connector/db-migration
-    tag: v0.9.3
+    name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/db-migration
+    tag: v0.9.11
   env: []
   affinity:
     nodeAffinity:
@@ -52,9 +55,12 @@ kmsConnectorGwListener:
   enabled: true
   nameOverride: kms-connector-gw-listener
   image:
-    name: hub.zama.ai/zama-protocol/zama-ai/fhevm/kms-connector/gw-listener
-    tag: v0.9.3
-  replicas: 1
+    name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/gw-listener
+    tag: v0.9.11
+  replicas: 2
+  config:
+    # Use full node
+    gatewayUrl: "http://gateway-node:8547"
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -74,8 +80,8 @@ kmsConnectorKmsWorker:
   enabled: true
   nameOverride: kms-connector-kms-worker
   image:
-    name: hub.zama.ai/zama-protocol/zama-ai/fhevm/kms-connector/kms-worker
-    tag: v0.9.3
+    name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/kms-worker
+    tag: v0.9.11
   replicas: 1
   config:
     kmsCoreEndpoints: "http://kms-core:50100"
@@ -102,9 +108,15 @@ kmsConnectorTxSender:
     tag: v0.9.3
   replicas: 1
   wallet:
-    secret:
-      name: connector-wallet-keys
-      key: kms_txsender.private_key
+    awsKms:
+      enabled: true
+      configmap:
+        name: mpc-party
+        key: KMS_CONNECTOR__TX_SENDER_AWS_KMS_KEY_ID
+    # The secret can be removed after migrating to AWS KMS
+    #secret:
+    #  name: connector-wallet-keys
+    #  key: kms_txsender_1.private_key
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -119,6 +131,3 @@ kmsConnectorTxSender:
       effect: NoSchedule
       operator: Equal
       value: "true"
-
-#tracing:
-#  endpoint: "http://observability-alloy.observability.svc.cluster.local:4317"
