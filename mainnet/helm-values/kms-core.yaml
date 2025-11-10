@@ -1,3 +1,6 @@
+kmsPeers:
+  id: 1
+
 kmsGenCertAndKeys:
   nameOverride: kms-gen-cert-and-keys
   enabled: true
