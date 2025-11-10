@@ -1,3 +1,3 @@
 Successfully executed mpc-operator-check, job logs will be available for {{ .Values.job.ttlSecondsAfterFinished }}s by executing:
 
-    kubectl logs -n {{ .Release.Namespace }} jobs/mpc-operator-check --all-containers
+    kubectl logs -n {{ .Release.Namespace }} -l app=mpc-operator-check --all-containers --tail=-1

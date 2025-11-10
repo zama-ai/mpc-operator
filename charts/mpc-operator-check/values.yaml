@@ -1,3 +1,11 @@
+mpcOperatorCheck:
+  kmsKeys:
+    enabled: false
+  kmsCore:
+    enabled: true
+  kmsConnector:
+    enabled: true
+
 awsCli:
   enabled: true
   image:
@@ -41,10 +49,7 @@ ethWallet:
     tag: 0.3.1
   script: |
     echo "Check KMS Connector wallet"
-    cast wallet address --private-key $KMS_CONNECTOR_PRIVATE_KEY
-  secret:
-    name: connector-wallet-keys
-    key: kms_txsender.private_key
+    echo "KMS-Connector Address:$(cast wallet address --aws)"
 kubectl:
   enabled: true
   image:
@@ -60,15 +65,6 @@ kubectl:
     echo "=================================================="
     echo "Kubernetes container docker image versions check"
     kubectl get pods -o=jsonpath='{range .items[*]}{.metadata.name}{"\t"}{range .spec.containers[*]}{.image}{" "}{end}{"\n"}{end}'
-    echo "=================================================="
-    echo "Kubernetes enclave nodes check"
-    kubectl describe node -l node.kubernetes.io/enclave-enabled=true
-    echo "Check kms-core logs"
-    kubectl logs -l app=kms-core --prefix -c kms-core-enclave-logger
-    echo "Check kms-connector logs"
-    kubectl logs -l app=kms-connector-gw-listener --prefix
-    kubectl logs -l app=kms-connector-kms-worker --prefix
-    kubectl logs -l app=kms-connector-tx-sender --prefix
 postgres:
   enabled: true
   image:
@@ -90,7 +86,7 @@ kmsCoreClient:
   enabled: true
   image:
     repository: hub.zama.org/zama-protocol/zama-ai/kms/core-client
-    tag: v0.12.1
+    tag: v0.12.4
   configmap:
     # Need to match the kms-core helm chart configmap (containing kms-server.toml and vaults.toml)
     name: kms-core-config
