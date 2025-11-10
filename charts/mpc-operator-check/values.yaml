@@ -1,10 +1,10 @@
 mpcOperatorCheck:
   kmsKeys:
-    enabled: false
+    enabled: true
   kmsCore:
-    enabled: true
+    enabled: false
   kmsConnector:
-    enabled: true
+    enabled: false
 
 awsCli:
   enabled: true
