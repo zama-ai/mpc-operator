@@ -1,0 +1,36 @@
+# As the helm chart is private, we need to pass credentials in the environments:
+# export ZAMA_KMS_USERNAME=***
+# export ZAMA_KMS_PASSWORD=***
+# export ZAMA_FHEVM_USERNAME=***
+# export ZAMA_FHEVM_PASSWORD=***
+repositories:
+  - name: hub-zama
+    url: hub.zama.org/zama-protocol
+    oci: true
+  - name: zama-kms
+    url: hub.zama.org/zama-protocol/zama-ai/kms/charts
+    oci: true
+  - name: zama-fhevm
+    url: hub.zama.org/zama-protocol/zama-ai/fhevm/charts
+    oci: true
+  - name: arbitrum
+    url: https://charts.arbitrum.io
+releases:
+  - name: kms-core
+    namespace: kms-decentralized
+    chart: zama-kms/kms-core
+    version: 1.4.10
+    values:
+      - helm-values/kms-core.yaml
+  - name: gateway-node
+    namespace: kms-decentralized
+    chart: arbitrum/nitro
+    version: 0.7.11
+    values:
+      - helm-values/gateway-node.yaml
+  - name: kms-connector
+    namespace: kms-decentralized
+    chart: zama-fhevm/kms-connector
+    version: 1.2.0
+    values:
+      - helm-values/kms-connector.yaml
