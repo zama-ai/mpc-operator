@@ -1,0 +1,129 @@
+commonConfig:
+  databaseUrl: "postgresql://$(DATABASE_ENDPOINT)/kmsconnector"
+  # Cannot be used for tx-sender until full node supports eth_sendRawTransactionSync
+  # gatewayUrl: "http://gateway-node:8547"
+  gatewayUrl: "$(CONDUIT_RPC_HTTP_URL)"
+  chainId: "261131"
+  gatewayContractAddresses:
+    decryption: "TODO_MAINNET"
+    gatewayConfig: "TODO_MAINNET"
+    kmsGeneration: "TODO_MAINNET"
+  env:
+    - name: CONDUIT_RPC_HTTP_URL
+      valueFrom:
+        secretKeyRef:
+          name: conduit
+          key: conduit-rpc-http-url
+    - name: DATABASE_ENDPOINT
+      valueFrom:
+        secretKeyRef:
+          name: connector-database
+          key: endpoint
+    - name: PGUSER
+      valueFrom:
+        secretKeyRef:
+          name: connector-database
+          key: username
+    - name: PGPASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: connector-database
+          key: password
+
+kmsConnectorDbMigration:
+  enabled: true
+  image:
+    name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/db-migration
+    tag: v0.9.11
+  env: []
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: "node.kubernetes.io/enclave-enabled"
+                operator: In
+                values:
+                  - "true"
+  tolerations:
+    - key: "node.kubernetes.io/enclave-enabled"
+      effect: NoSchedule
+      operator: Equal
+      value: "true"
+
+kmsConnectorGwListener:
+  enabled: true
+  nameOverride: kms-connector-gw-listener
+  image:
+    name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/gw-listener
+    tag: v0.9.11
+  # Set 2 replicas for more resiliency and proper rolling upgrades
+  replicas: 2
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: "node.kubernetes.io/enclave-enabled"
+                operator: In
+                values:
+                  - "true"
+  tolerations:
+    - key: "node.kubernetes.io/enclave-enabled"
+      effect: NoSchedule
+      operator: Equal
+      value: "true"
+
+kmsConnectorKmsWorker:
+  enabled: true
+  nameOverride: kms-connector-kms-worker
+  image:
+    name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/kms-worker
+    tag: v0.9.11
+  replicas: 1
+  config:
+    kmsCoreEndpoints: "http://kms-core:50100"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: "node.kubernetes.io/enclave-enabled"
+                operator: In
+                values:
+                  - "true"
+  tolerations:
+    - key: "node.kubernetes.io/enclave-enabled"
+      effect: NoSchedule
+      operator: Equal
+      value: "true"
+
+kmsConnectorTxSender:
+  enabled: true
+  nameOverride: kms-connector-tx-sender
+  image:
+    name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/tx-sender
+    tag: v0.9.11
+  replicas: 1
+  serviceAccountName: mpc-party-connector
+  wallet:
+    # Use the kms-connector tx-sender KMS key as ethereum wallet
+    awsKms:
+      enabled: true
+      configmap:
+        name: mpc-party
+        key: KMS_CONNECTOR__TX_SENDER_AWS_KMS_KEY_ID
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: "node.kubernetes.io/enclave-enabled"
+                operator: In
+                values:
+                  - "true"
+  tolerations:
+    - key: "node.kubernetes.io/enclave-enabled"
+      effect: NoSchedule
+      operator: Equal
+      value: "true"
