@@ -143,11 +143,17 @@ save_to_secrets_manager() {
 save_to_1password() {
     print_status "Step 5: Saving age private key to 1Password..."
     
-    # Check if 1PASSWORD_VAULT is set
-    if [ -z "${1PASSWORD_VAULT:-}" ]; then
-        1PASSWORD_VAULT="Private"
-        print_warning "1PASSWORD_VAULT not set. Using default: $1PASSWORD_VAULT"
+    # Check if OP_VAULT is set
+    if [ -z "${OP_VAULT:-}" ]; then
+        OP_VAULT="Private"
+        print_warning "OP_VAULT not set. Using default: $OP_VAULT"
     fi
+
+    if [ -z "${OP_TITLE:-}" ]; then
+        OP_TITLE="KMS Connector Age Private Key"
+        print_warning "OP_TITLE not set. Using default: $OP_TITLE"
+    fi
+    
     
     # Check if user is signed in to 1Password
     if ! op account get &>/dev/null; then
@@ -160,8 +166,8 @@ save_to_1password() {
     # Create 1Password item
     op item create \
         --category="Secure Note" \
-        --title="KMS Connector Age Private Key" \
-        --vault="$1PASSWORD_VAULT" \
+        --title="$OP_TITLE" \
+        --vault="$OP_VAULT" \
         "notesPlain=$AGE_PRIVATE_KEY" \
         &>/dev/null
     
