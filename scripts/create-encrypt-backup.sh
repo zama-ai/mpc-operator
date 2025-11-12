@@ -168,8 +168,7 @@ save_to_1password() {
         --category="Secure Note" \
         --title="$OP_TITLE" \
         --vault="$OP_VAULT" \
-        "notesPlain=$AGE_PRIVATE_KEY" \
-        &>/dev/null
+        "notesPlain=$AGE_PRIVATE_KEY"
     
     print_status "Age private key saved to 1Password successfully"
 }
