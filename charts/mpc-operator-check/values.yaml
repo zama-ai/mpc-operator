@@ -125,7 +125,6 @@ utils:
     tag: 0.4.0-safe
   script: |
     echo "Kube Utils check"
-    curl ifconfig.me
   # tail -f /dev/null
 job:
   ttlSecondsAfterFinished: 300

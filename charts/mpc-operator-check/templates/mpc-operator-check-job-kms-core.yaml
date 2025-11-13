@@ -69,6 +69,7 @@ spec:
             - |
               echo "=================================================="
               {{- .Values.netcat.script | nindent 14 }}
+              exit 0
         {{- end }}
         {{- if .Values.kmsCoreClient.enabled }}
         - name: kms-config
