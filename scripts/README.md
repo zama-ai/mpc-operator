@@ -1,5 +1,5 @@
 # OVERVIEW
-In order to exectue the `create-encrypt-backup.sh` script, the dependencies and environment variables defined below must be completed
+In order to execute the `create-encrypt-backup.sh` script, the dependencies and environment variables defined below must be completed
 
 ## Dependencies
 
@@ -32,14 +32,6 @@ A 1Password Service Account needs to be created which grants at least write acce
 
 https://developer.1password.com/docs/service-accounts/get-started/
 
-## Set Environment Variables
-
-1. `AWS_KMS_KEY_ID`           = ID of AWS KMS Key for storing the Ethereum private key
-2.  `SECRET_NAME`             = The name of the AWS Secrets Manager secret for the Age-encrypted Ethereum private key
-3. `OP_SERVICE_ACCOUNT_TOKEN` = 1Password Service Account token
-4. `OP_VAULT`                 = Name of the 1Password Vault where Age private key will be saved
-5. `OP_TITLE`                 = Name of the Age private key secret stored in 1Password
-
 ## Clone repo and make script executable
 
 ```
@@ -47,5 +39,24 @@ git clone https://github.com/zama-ai/mpc-operator.git
 cd mpc-operator
 git checkout <commit hash | tag>
 cd scripts
-chmod +x create-encrypt-backup.sh
+chmod +x create-encrypt-backup.sh create-age-key.sh
+```
+
+## Usage
+
+To generate an Age keypair and upload it to 1Password:
+
+```
+export OP_SERVICE_ACCOUNT_TOKEN= # 1Password Service Account token
+export OP_VAULT=                 # Name of the 1Password Vault where Age private key will be saved
+export OP_TITLE=                 # Name of the Age private key secret stored in 1Password
+./create-age-keypair.sh
+```
+
+To generate the Ethereum private key and encrypt it with the Age public key:
+```
+export AWS_KMS_KEY_ID=       # ID of AWS KMS Key for storing the Ethereum private key
+export SECRET_NAME=          # Name of the AWS Secrets Manager secret to store the encrypted Ethereum private key backup
+exoprt AGE_PUBLIC_KEY=       # Age public key to encrypt the Ethereum private key at rest
+./create-and-backup-eth-key.sh
 ```

@@ -92,13 +92,6 @@ import_to_kms() {
 encrypt_with_age() {
     print_status "Step 3: Encrypting wallet key with age..."
     
-    # Generate age keypair
-    AGE_KEYPAIR=$(age-keygen 2>/dev/null)
-    AGE_PUBLIC_KEY=$(echo "$AGE_KEYPAIR" | grep "public key:" | cut -d: -f2 | xargs)
-    AGE_PRIVATE_KEY=$(echo "$AGE_KEYPAIR" | grep "AGE-SECRET-KEY")
-    
-    echo "$AGE_PRIVATE_KEY" > age-private.key
-    
     # Encrypt the wallet key with age
     cat kms-connector-wallet.key | age -r "$AGE_PUBLIC_KEY" > kms-connector-wallet.key.age
     
@@ -139,47 +132,13 @@ save_to_secrets_manager() {
     print_status "Secret saved successfully"
 }
 
-# Step 5: Save age private key to 1Password
-save_to_1password() {
-    print_status "Step 5: Saving age private key to 1Password..."
-    
-    # Check if OP_VAULT is set
-    if [ -z "${OP_VAULT:-}" ]; then
-        OP_VAULT="Private"
-        print_warning "OP_VAULT not set. Using default: $OP_VAULT"
-    fi
-
-    if [ -z "${OP_TITLE:-}" ]; then
-        OP_TITLE="KMS Connector Age Private Key"
-        print_warning "OP_TITLE not set. Using default: $OP_TITLE"
-    fi
-    
-    
-    # Check if user is signed in to 1Password
-    if ! op account get &>/dev/null; then
-        print_error "Not signed in to 1Password. Please run: eval \$(op signin)"
-        exit 1
-    fi
-    
-    AGE_PRIVATE_KEY=$(cat age-private.key)
-    
-    # Create 1Password item
-    op item create \
-        --category="Secure Note" \
-        --title="$OP_TITLE" \
-        --vault="$OP_VAULT" \
-        "notesPlain=$AGE_PRIVATE_KEY"
-    
-    print_status "Age private key saved to 1Password successfully"
-}
-
 # Cleanup function
 cleanup() {
     print_status "Cleaning up all files..."
     rm -f private-key.pem private-key.der key-import-params.json \
           WrappingPublicKey.bin ImportToken.bin EncryptedKeyMaterial.bin \
-          age-private.key kms-connector-wallet.key kms-connector-wallet.key.age
-    print_status "All files deleted - secrets are safely stored in AWS and 1Password"
+          kms-connector-wallet.key kms-connector-wallet.key.age
+    print_status "All files deleted - secrets are safely stored in AWS"
 }
 
 # Main execution
@@ -191,7 +150,6 @@ main() {
     import_to_kms
     encrypt_with_age
     save_to_secrets_manager
-    save_to_1password
     cleanup
     
     echo ""
@@ -204,7 +162,6 @@ main() {
     print_status "Secrets stored in:"
     print_status "  ✓ AWS KMS - Key material"
     print_status "  ✓ AWS Secrets Manager - Encrypted wallet key"
-    print_status "  ✓ 1Password - Age private key"
 }
 
 # Run main function
