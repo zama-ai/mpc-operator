@@ -3,9 +3,9 @@ In order to exectue the `create-encrypt-backup.sh` script, the dependencies and 
 
 ## Dependencies
 
-1. Install `Foundry` - https://getfoundry.sh/
+1. Install `Foundry`       - https://getfoundry.sh/
 2. Install `1Password` CLI - https://developer.1password.com/docs/cli/get-started/#install
-3. Install `Age` - https://github.com/FiloSottile/age
+3. Install `Age`           - https://github.com/FiloSottile/age
 
 ```
 # Foundry
