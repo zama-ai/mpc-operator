@@ -2,7 +2,7 @@ mpcOperatorCheck:
   kmsKeys:
     enabled: true
   kmsCore:
-    enabled: false
+    enabled: true
   kmsConnector:
     enabled: false
 
@@ -98,7 +98,8 @@ kmsCoreClient:
     cat enclave.json
     echo "=================================================="
     echo "KMS-Core health check"
-    kms-health-check full --endpoint kms-core:50100 --config kms-server.toml
+    kms-health-check config --file kms-server.toml
+    #kms-health-check full --endpoint kms-core:50100 --config kms-server.toml
 netcat:
   enabled: true
   image:
