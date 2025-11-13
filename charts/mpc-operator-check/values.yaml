@@ -83,7 +83,7 @@ postgres:
     echo "View Table _sqlx_migrations of RDS Database: DATABASE_ENDPOINT"
     psql "$DATABASE_URL" -c "SELECT version, description, installed_on, success, execution_time FROM _sqlx_migrations ORDER BY version;"
 kmsCoreClient:
-  enabled: true
+  enabled: false
   image:
     repository: hub.zama.org/zama-protocol/zama-ai/kms/core-client
     tag: v0.12.4
