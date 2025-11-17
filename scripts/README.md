@@ -39,7 +39,7 @@ git clone https://github.com/zama-ai/mpc-operator.git
 cd mpc-operator
 git checkout <commit hash | tag>
 cd scripts
-chmod +x create-encrypt-backup.sh create-age-key.sh
+chmod +x create-and-backup-eth-key.sh create-age-keypair.sh
 ```
 
 ## Usage
@@ -53,7 +53,13 @@ export OP_TITLE=                 # Name of the Age private key secret stored in 
 ./create-age-keypair.sh
 ```
 
-To generate the Ethereum private key and encrypt it with the Age public key:
+To generate the Ethereum private key and upload it to AWS secret manager:
+```
+export SECRET_NAME=          # Name of the AWS Secrets Manager secret to store the encrypted Ethereum private key backup
+./create-and-backup-eth-key.sh
+```
+
+To generate the Ethereum private key, encrypt it with the Age public key and upload it to AWS secret manager:
 ```
 export AWS_KMS_KEY_ID=       # ID of AWS KMS Key for storing the Ethereum private key
 export SECRET_NAME=          # Name of the AWS Secrets Manager secret to store the encrypted Ethereum private key backup
