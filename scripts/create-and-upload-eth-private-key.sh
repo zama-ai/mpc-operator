@@ -49,9 +49,10 @@ save_to_secrets_manager() {
         print_warning "SECRET_NAME not set."
         exit 1
     fi
-    
-    CONTENT=$(base64 -i wallet.key)
-    
+
+    # Construct JSON string for the secret
+    CONTENT="{\"wallet.private_key\":\"$(cat wallet.key)\"}"
+
     # Create or update the secret
     if aws secretsmanager describe-secret --secret-id "$SECRET_NAME" &>/dev/null; then
         print_status "Secret exists, updating..."
