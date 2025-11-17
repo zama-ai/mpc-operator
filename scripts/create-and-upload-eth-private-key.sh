@@ -40,17 +40,16 @@ create_keypair() {
     print_status "Keypair created successfully"
 }
 
-# Step 2: Save encrypted key to AWS Secrets Manager
+# Step 2: Save key to AWS Secrets Manager
 save_to_secrets_manager() {
-    print_status "Step 2: Saving encrypted key to AWS Secrets Manager..."
+    print_status "Step 2: Saving key to AWS Secrets Manager..."
     
     # Check if SECRET_NAME is set
     if [ -z "${SECRET_NAME:-}" ]; then
-        SECRET_NAME="wallet-encrypted-key"
-        print_warning "SECRET_NAME not set. Using default: $SECRET_NAME"
+        print_warning "SECRET_NAME not set."
+        exit 1
     fi
     
-    # Read the encrypted file content
     CONTENT=$(base64 -i wallet.key)
     
     # Create or update the secret
@@ -93,7 +92,7 @@ main() {
     print_status "Ethereum Public Address: $PUBLIC_KEY"
     echo ""
     print_status "Secrets stored in:"
-    print_status "  ✓ AWS Secrets Manager - Encrypted wallet key"
+    print_status "  ✓ AWS Secrets Manager - Wallet key"
 }
 
 # Run main function
