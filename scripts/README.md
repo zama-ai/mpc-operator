@@ -45,7 +45,6 @@ chmod +x create-age-keypair.sh create-and-backup-eth-kms-key.sh create-and-uploa
 ## Usage
 
 To generate an Age keypair and upload it to 1Password:
-
 ```
 export OP_SERVICE_ACCOUNT_TOKEN= # 1Password Service Account token
 export OP_VAULT=                 # Name of the 1Password Vault where Age private key will be saved
@@ -65,4 +64,34 @@ export AWS_KMS_KEY_ID=       # ID of AWS KMS Key for storing the Ethereum privat
 export SECRET_NAME=          # Name of the AWS Secrets Manager secret to store the encrypted Ethereum private key backup
 export AGE_PUBLIC_KEY=       # Age public key to encrypt the Ethereum private key at rest
 ./create-and-backup-eth-kms-key.sh
+```
+
+To copy an Ethereum private key from AWS secret manager in a first AWS account to a second AWS account:
+```
+export SOURCE_SECRET_NAME= # Name of the AWS secret manager secret in the first AWS account
+export DEST_SECRET_NAME=   # Name of the AWS secret manager secret in the second AWS account
+export DEST_REGION=        # Region in the second AWS account where the secret should be stored
+
+# AWS IAM credentials for the second AWS account. These should be tightly scoped and least permissive.
+# The following is all that is required:
+# {
+#    "Version": "2012-10-17",
+#    "Statement": [
+#        {
+#           "Sid": "AllowSecretsManagerWrite",
+#            "Effect": "Allow",
+#            "Action": [
+#                "secretsmanager:CreateSecret",
+#                "secretsmanager:PutSecretValue",
+#                "secretsmanager:TagResource"
+#            ],
+#            "Resource": "*"
+#        }
+#    ]
+# }
+export ENV_AWS_ACCESS_KEY_ID=     
+export ENV_AWS_SECRET_ACCESS_KEY=
+export ENV_AWS_SESSION_TOKEN=
+
+./copy-eth-private-key.sh
 ```
