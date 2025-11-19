@@ -37,7 +37,13 @@ spec:
             - -c
             - |
               echo "=================================================="
-              {{- .Values.gatewayNode.script | nindent 14 }}
+              echo "Gateway Node checks"
+              curl -s {{ .Values.gatewayNode.url }} -X POST -H "Content-Type: application/json" \
+                --data '{"method":"eth_chainId","params":[],"id":1,"jsonrpc":"2.0"}' | jq -r ".result"  | xargs -I {} printf "eth_chainId:%d\n" {}"
+              curl -s {{ .Values.gatewayNode.url }} -X POST -H "Content-Type: application/json" \
+                --data '{"method":"eth_syncing","params":[],"id":1,"jsonrpc":"2.0"}' | jq -r ".result" | xargs -I {} echo "eth_syncing:{}"
+              curl -s {{ .Values.gatewayNode.url }} -X POST -H "Content-Type: application/json" \
+                --data '{"method":"eth_blockNumber","params":[],"id":1,"jsonrpc":"2.0"}' | jq -r ".result" | xargs -I {} printf "eth_blockNumber:%d\n" {}"
           envFrom:
             - configMapRef:
                 name: {{ .Values.configmap.name }}
@@ -81,9 +87,9 @@ spec:
             - |
               echo "=================================================="
               echo "Check kms-connector services /healthz endpoint"
-              curl kms-connector-gw-listener:9100/healtz
-              curl kms-connector-kms-worker:9100/healtz
-              curl kms-connector-tx-sender:9100/healtz
+              curl -sv kms-connector-gw-listener:9100/healthz
+              curl -sv kms-connector-kms-worker:9100/healthz
+              curl -sv kms-connector-tx-sender:9100/healthz
               echo "=================================================="
               echo "Check kms-connector logs"
               kubectl logs -l app=kms-connector-gw-listener --prefix

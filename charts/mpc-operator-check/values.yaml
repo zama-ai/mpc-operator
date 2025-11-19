@@ -30,14 +30,7 @@ gatewayNode:
     # Private secure image
     repository: hub.zama.org/zama-protocol/zama-ai/security-hub/infra/kube-utils
     tag: v0.4.0
-  script: |
-    echo "Gateway Node checks"
-    curl -s http://gateway-node:8547 -X POST -H "Content-Type: application/json" \
-      --data '{"method":"eth_chainId","params":[],"id":1,"jsonrpc":"2.0"}' | jq -r ".result"  | xargs -I {} printf "eth_chainId:%d\n" {}
-    curl -s http://gateway-node:8547 -X POST -H "Content-Type: application/json" \
-      --data '{"method":"eth_syncing","params":[],"id":1,"jsonrpc":"2.0"}' | jq -r ".result" | xargs -I {} echo "eth_syncing:{}"
-    curl -s http://gateway-node:8547 -X POST -H "Content-Type: application/json" \
-      --data '{"method":"eth_blockNumber","params":[],"id":1,"jsonrpc":"2.0"}' | jq -r ".result" | xargs -I {} printf "eth_blockNumber:%d\n" {}
+  url: http://gateway-node:8547
 ethWallet:
   enabled: true
   image:
