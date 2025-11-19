@@ -39,11 +39,11 @@ spec:
               echo "=================================================="
               echo "Gateway Node checks"
               curl -s {{ .Values.gatewayNode.url }} -X POST -H "Content-Type: application/json" \
-                --data '{"method":"eth_chainId","params":[],"id":1,"jsonrpc":"2.0"}' | jq -r ".result"  | xargs -I {} printf "eth_chainId:%d\n" {}"
+                --data '{"method":"eth_chainId","params":[],"id":1,"jsonrpc":"2.0"}' | jq -r ".result"  | xargs -I {} printf "eth_chainId:%d\n" {}
               curl -s {{ .Values.gatewayNode.url }} -X POST -H "Content-Type: application/json" \
                 --data '{"method":"eth_syncing","params":[],"id":1,"jsonrpc":"2.0"}' | jq -r ".result" | xargs -I {} echo "eth_syncing:{}"
               curl -s {{ .Values.gatewayNode.url }} -X POST -H "Content-Type: application/json" \
-                --data '{"method":"eth_blockNumber","params":[],"id":1,"jsonrpc":"2.0"}' | jq -r ".result" | xargs -I {} printf "eth_blockNumber:%d\n" {}"
+                --data '{"method":"eth_blockNumber","params":[],"id":1,"jsonrpc":"2.0"}' | jq -r ".result" | xargs -I {} printf "eth_blockNumber:%d\n" {}
           envFrom:
             - configMapRef:
                 name: {{ .Values.configmap.name }}
