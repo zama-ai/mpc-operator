@@ -76,7 +76,7 @@ postgres:
     echo "View Table _sqlx_migrations of RDS Database: DATABASE_ENDPOINT"
     psql "$DATABASE_URL" -c "SELECT version, description, installed_on, success, execution_time FROM _sqlx_migrations ORDER BY version;"
 kmsCoreClient:
-  enabled: false
+  enabled: true
   image:
     repository: hub.zama.org/zama-protocol/zama-ai/kms/core-client
     tag: v0.12.4
@@ -91,8 +91,8 @@ kmsCoreClient:
     cat enclave.json
     echo "=================================================="
     echo "KMS-Core health check"
-    kms-health-check config --file kms-server.toml
-    #kms-health-check full --endpoint kms-core:50100 --config kms-server.toml
+    #kms-health-check config --file kms-server.toml
+    kms-health-check live --endpoint kms-core:50100 --config kms-server.toml
 netcat:
   enabled: true
   image:
