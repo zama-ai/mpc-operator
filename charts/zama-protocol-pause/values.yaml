@@ -1,0 +1,98 @@
+nameOverride: ""
+fullnameOverride: "zama-protocol-pause"
+
+# devnet/testnet/mainnet
+network: "mainnet"
+dryRun: false
+
+wallet:
+  awsKMS:
+    enabled: true
+    configmap:
+      name: pauser
+      key: AWS_KMS_KEY_ID
+  # If awsKms is set to false, fall back to using the private key set in the `pauser-wallet` secret.
+  secret:
+    name: pauser-wallet
+    key: private-key
+
+config:
+  pauseMethodIds:
+    gatewayConfigContract: "0x9a5a3bc4"
+    ethereumAclContract: "0x8456cb59"
+  devnet:
+    gatewayConfigContractAddress: "0x530749d571beBEc20980425557968cabc6328296"
+    ethereumAclContractAddress: "0xBCA6F8De823a399Dc431930FD5EE550Bf1C0013e"
+  testnet:
+    gatewayConfigContractAddress: "0x94153006067B89399e059284f5a7Fe016940E332"
+    ethereumAclContractAddress: "0xf0Ffdc93b7E186bC2f8CB3dAA75D86d1930A433D"
+  mainnet:
+    gatewayConfigContractAddress: "0xDE537Be194777A56f8B19d14079E6a78249390ab"
+    ethereumAclContractAddress: "0xcA2E8f1F656CD25C01F05d0b243Ab1ecd4a8ffb6"
+
+env:
+  - name: GATEWAY_RPC_URL
+    valueFrom:
+      secretKeyRef:
+        name: rpcs
+        key: gateway-rpc-url
+  - name: ETHEREUM_RPC_URL
+    valueFrom:
+      secretKeyRef:
+        name: rpcs
+        key: ethereum-rpc-url
+# It is highly recommended to use an authenticated RPC endpoint instead of a public one for reliability.
+# Example public RPC endpoints for reference:
+# Zama Gateway Devnet
+# - name: GATEWAY_RPC_URL
+#   value: "https://rpc-zama-devnet-0.t.conduit.xyz"
+# Zama Gateway Testnet
+# - name: GATEWAY_RPC_URL
+#   value: "https://rpc-zama-testnet-0.t.conduit.xyz"
+# Zama Gateway Mainnet
+# - name: GATEWAY_RPC_URL
+#   value: "https://rpc-zama-gateway-mainnet.t.conduit.xyz"
+# Ethereum Sepolia
+# - name: ETHEREUM_RPC_URL
+#   value: "https://rpc-sepolia.flashbots.net/"
+# Ethereum Mainnet
+# - name: ETHEREUM_RPC_URL
+#   value: "https://rpc.flashbots.net/fast"
+
+image:
+  repository: ghcr.io/foundry-rs/foundry
+  tag: stable
+  pullPolicy: ""
+
+imagePullSecrets:
+#  - name: registry-credentials
+
+serviceAccount:
+  create: false
+  name: "zama-protocol-pause"
+  annotations: {}
+
+cronjob:
+  enabled: true
+  annotations: {}
+  # Set to never execute automatically
+  schedule: "0 0 31 2 *"
+  concurrencyPolicy: "Forbid"
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 10
+  startingDeadlineSeconds:
+  suspend: true
+  ttlSecondsAfterFinished:
+  backoffLimit: 0
+  activeDeadlineSeconds:
+  restartPolicy: "Never"
+
+  # Environment variables from ConfigMaps or Secrets
+  envFrom: []
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi

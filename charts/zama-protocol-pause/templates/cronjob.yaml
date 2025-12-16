@@ -1,0 +1,155 @@
+{{- if .Values.cronjob.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "zama-protocol-pause.fullname" . }}
+  namespace: {{ include "zama-protocol-pause.namespace" . }}
+  labels:
+    {{- include "zama-protocol-pause.labels" . | nindent 4 }}
+  {{- with .Values.cronjob.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  schedule: {{ .Values.cronjob.schedule | quote }}
+  {{- with .Values.cronjob.concurrencyPolicy }}
+  concurrencyPolicy: {{ . }}
+  {{- end }}
+  {{- with .Values.cronjob.failedJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ . }}
+  {{- end }}
+  {{- with .Values.cronjob.successfulJobsHistoryLimit }}
+  successfulJobsHistoryLimit: {{ . }}
+  {{- end }}
+  {{- with .Values.cronjob.startingDeadlineSeconds }}
+  startingDeadlineSeconds: {{ . }}
+  {{- end }}
+  {{- with .Values.cronjob.suspend }}
+  suspend: {{ . }}
+  {{- end }}
+  jobTemplate:
+    spec:
+      {{- with .Values.cronjob.ttlSecondsAfterFinished }}
+      ttlSecondsAfterFinished: {{ . }}
+      {{- end }}
+      {{- with .Values.cronjob.backoffLimit }}
+      backoffLimit: {{ . }}
+      {{- end }}
+      {{- with .Values.cronjob.activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ . }}
+      {{- end }}
+      template:
+        metadata:
+          {{- with .Values.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          labels:
+            {{- include "zama-protocol-pause.selectorLabels" . | nindent 12 }}
+            {{- with .Values.podLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        spec:
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.serviceAccount.create }}
+          serviceAccountName: {{ include "zama-protocol-pause.serviceAccountName" . }}
+          {{- end }}
+          {{- with .Values.podSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          restartPolicy: {{ .Values.cronjob.restartPolicy | default "Never" }}
+          containers:
+            - name: {{ .Chart.Name }}
+              {{- with .Values.securityContext }}
+              securityContext:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              image: "{{ .Values.image.repository | default .Values.image.repository }}:{{ .Values.image.tag | default .Values.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy | default .Values.image.pullPolicy }}
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  {{- if .Values.wallet.awsKMS.enabled }}
+                  PAUSER_ADDRESS=$(cast wallet address --aws ${WALLET_PRIVATE_KEY})
+                  {{- else }}
+                  PAUSER_ADDRESS=$(cast wallet address --private-key ${WALLET_PRIVATE_KEY})
+                  {{- end }}
+                  echo "Pauser wallet address:${PAUSER_ADDRESS}"
+                  echo "Get wallet balance on Ethereum (Host) {{ .Values.network | title }}:"
+                  cast balance ${PAUSER_ADDRESS} --rpc-url ${ETHEREUM_RPC_URL}
+                  echo "Get wallet balance on Gateway  {{ .Values.network | title }}:"
+                  cast balance ${PAUSER_ADDRESS} --rpc-url ${GATEWAY_RPC_URL}
+                  {{- if .Values.dryRun }}
+                  echo "Running in dry-run mode, no transactions will be sent."
+                  {{- else }}
+                  echo "Pause Zama Protocol on Ethereum (Host) {{ .Values.network | title }}"
+                  cast send {{ if .Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} ${ETHEREUM_ACL_CONTRACT_ADDRESS} ${ETHEREUM_ACL_CONTRACT_PAUSE_METHOD_ID} --rpc-url ${ETHEREUM_RPC_URL}
+                  echo "Pause Zama Protocol on Gateway {{ .Values.network | title }}"
+                  cast send {{ if .Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} ${GATEWAY_CONFIG_CONTRACT_ADDRESS} ${GATEWAY_CONFIG_CONTRACT_PAUSE_METHOD_ID} --rpc-url ${GATEWAY_RPC_URL}
+                  {{- end }}
+              env:
+                {{- if .Values.wallet.awsKMS.enabled }}
+                - name: AWS_KMS_KEY_ID
+                  valueFrom:
+                    configMapKeyRef:
+                      name: {{ .Values.wallet.awsKMS.configmap.name }}
+                      key: {{ .Values.wallet.awsKMS.configmap.key }}
+                {{- else }}
+                - name: WALLET_PRIVATE_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.wallet.secret.name }}
+                      key: {{ .Values.wallet.secret.key }}
+                {{- end }}
+                {{- with index .Values.config .Values.network }}
+                - name: ETHEREUM_ACL_CONTRACT_ADDRESS
+                  value: {{ .ethereumAclContractAddress | quote }}
+                - name: GATEWAY_CONFIG_CONTRACT_ADDRESS
+                  value: {{ .gatewayConfigContractAddress | quote}}
+                {{- end }}
+                - name: ETHEREUM_ACL_CONTRACT_PAUSE_METHOD_ID
+                  value: {{ .Values.config.pauseMethodIds.ethereumAclContract | quote }}
+                - name: GATEWAY_CONFIG_CONTRACT_PAUSE_METHOD_ID
+                  value: {{ .Values.config.pauseMethodIds.gatewayConfigContract | quote }}
+              {{- with .Values.env }}
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- with .Values.cronjob.envFrom }}
+              envFrom:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- if .Values.cronjob.resources }}
+              resources:
+                {{- toYaml .Values.cronjob.resources | nindent 16 }}
+              {{- else }}
+              {{- with .Values.resources }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- end }}
+              {{- with .Values.volumeMounts }}
+              volumeMounts:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+          {{- with .Values.volumes }}
+          volumes:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}
