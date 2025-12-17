@@ -3,7 +3,7 @@ fullnameOverride: "zama-protocol-pause"
 
 # devnet/testnet/mainnet
 network: "mainnet"
-dryRun: false
+dryRun: true
 
 wallet:
   awsKMS:
