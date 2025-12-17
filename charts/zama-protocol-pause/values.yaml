@@ -5,11 +5,16 @@ fullnameOverride: "zama-protocol-pause"
 network: "mainnet"
 dryRun: true
 
+serviceAccount:
+  create: false
+  name: zama-protocol-pause
+  annotations: {}
+
 wallet:
   awsKMS:
     enabled: true
     configmap:
-      name: pauser
+      name: zama-protocol-pause
       key: AWS_KMS_KEY_ID
   # If awsKms is set to false, fall back to using the private key set in the `pauser-wallet` secret.
   secret:
@@ -70,11 +75,6 @@ image:
 
 imagePullSecrets:
 #  - name: registry-credentials
-
-serviceAccount:
-  create: false
-  name: "zama-protocol-pause"
-  annotations: {}
 
 cronjob:
   enabled: true
