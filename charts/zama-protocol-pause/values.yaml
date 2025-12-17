@@ -17,9 +17,13 @@ wallet:
     key: private-key
 
 config:
+  # Method to pause the contracts.
   pauseMethodIds:
     gatewayConfigContract: "0x9a5a3bc4"
     ethereumAclContract: "0x8456cb59"
+  # Method to check if the contracts are paused.
+  pausedMethodIds:
+    ethereumAclContract: "0x5c975abb"
   devnet:
     gatewayConfigContractAddress: "0x530749d571beBEc20980425557968cabc6328296"
     ethereumAclContractAddress: "0xBCA6F8De823a399Dc431930FD5EE550Bf1C0013e"

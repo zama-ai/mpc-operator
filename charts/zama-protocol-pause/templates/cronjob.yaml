@@ -80,15 +80,28 @@ spec:
                   PAUSER_ADDRESS=$(cast wallet address --private-key ${WALLET_PRIVATE_KEY})
                   {{- end }}
                   echo "Pauser wallet address:${PAUSER_ADDRESS}"
+                  echo "=================================================="
                   echo "Get wallet balance on Ethereum (Host) {{ .Values.network | title }}:"
                   cast balance ${PAUSER_ADDRESS} --rpc-url ${ETHEREUM_RPC_URL}
                   echo "Get wallet balance on Gateway  {{ .Values.network | title }}:"
                   cast balance ${PAUSER_ADDRESS} --rpc-url ${GATEWAY_RPC_URL}
+                  echo "=================================================="
+                  echo "Get Ethereum (Host) {{ .Values.network | title }} paused status:"
+                  ETH_CONTRACTS_PAUSED_STATUS=$(cast call ${ETHEREUM_ACL_CONTRACT_ADDRESS} ${ETHEREUM_ACL_CONTRACT_PAUSED_METHOD_ID} --rpc-url ${ETHEREUM_RPC_URL})
+                  if [ "${ETH_CONTRACTS_PAUSED_STATUS}" = "0x0000000000000000000000000000000000000000000000000000000000000000" ]; then
+                    echo "${ETH_CONTRACTS_PAUSED_STATUS} (Ethereum Contracts are *not* paused)"
+                  else
+                    echo "${ETH_CONTRACTS_PAUSED_STATUS} (Ethereum Contracts are already paused)"
+                  fi
+                  echo "=================================================="
+
                   {{- if .Values.dryRun }}
                   echo "Running in dry-run mode, no transactions will be sent."
                   {{- else }}
-                  echo "Pause Zama Protocol on Ethereum (Host) {{ .Values.network | title }}"
-                  cast send {{ if .Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} ${ETHEREUM_ACL_CONTRACT_ADDRESS} ${ETHEREUM_ACL_CONTRACT_PAUSE_METHOD_ID} --rpc-url ${ETHEREUM_RPC_URL}
+                  if [ "${ETH_CONTRACTS_PAUSED_STATUS}" = "0x0000000000000000000000000000000000000000000000000000000000000000" ]; then
+                    echo "Pause Zama Protocol on Ethereum (Host) {{ .Values.network | title }}"
+                    cast send {{ if .Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} ${ETHEREUM_ACL_CONTRACT_ADDRESS} ${ETHEREUM_ACL_CONTRACT_PAUSE_METHOD_ID} --rpc-url ${ETHEREUM_RPC_URL}
+                  fi
                   echo "Pause Zama Protocol on Gateway {{ .Values.network | title }}"
                   cast send {{ if .Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} ${GATEWAY_CONFIG_CONTRACT_ADDRESS} ${GATEWAY_CONFIG_CONTRACT_PAUSE_METHOD_ID} --rpc-url ${GATEWAY_RPC_URL}
                   {{- end }}
@@ -114,6 +127,8 @@ spec:
                 {{- end }}
                 - name: ETHEREUM_ACL_CONTRACT_PAUSE_METHOD_ID
                   value: {{ .Values.config.pauseMethodIds.ethereumAclContract | quote }}
+                - name: ETHEREUM_ACL_CONTRACT_PAUSED_METHOD_ID
+                  value: {{ .Values.config.pausedMethodIds.ethereumAclContract | quote }}
                 - name: GATEWAY_CONFIG_CONTRACT_PAUSE_METHOD_ID
                   value: {{ .Values.config.pauseMethodIds.gatewayConfigContract | quote }}
               {{- with .Values.env }}
