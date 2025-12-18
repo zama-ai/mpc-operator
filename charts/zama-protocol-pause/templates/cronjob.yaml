@@ -54,9 +54,7 @@ spec:
           imagePullSecrets:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if .Values.serviceAccount.create }}
           serviceAccountName: {{ include "zama-protocol-pause.serviceAccountName" . }}
-          {{- end }}
           {{- with .Values.podSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}

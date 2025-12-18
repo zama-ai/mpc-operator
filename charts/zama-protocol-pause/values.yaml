@@ -50,6 +50,7 @@ env:
       secretKeyRef:
         name: rpcs
         key: ethereum-rpc-url
+
 # It is highly recommended to use an authenticated RPC endpoint instead of a public one for reliability.
 # Example public RPC endpoints for reference:
 # Zama Gateway Devnet
