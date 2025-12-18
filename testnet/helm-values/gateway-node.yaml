@@ -17,7 +17,7 @@ customArgs:
 
 persistence:
   enabled: true
-  size: 250Gi
+  size: 1000Gi
   storageClassName: gp3
 
 extraEnv:
