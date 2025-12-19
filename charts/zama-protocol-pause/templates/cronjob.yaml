@@ -50,7 +50,9 @@ spec:
             {{- toYaml . | nindent 12 }}
             {{- end }}
         spec:
+          {{- if or .Values.wallet.awsKMS.enabled .Values.serviceAccount.create }}
           serviceAccountName: {{ include "zama-protocol-pause.serviceAccountName" . }}
+          {{- end }}
           {{- with .Values.imagePullSecrets }}
           imagePullSecrets:
             {{- toYaml . | nindent 12 }}
