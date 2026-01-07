@@ -26,8 +26,6 @@ config:
   pauseMethodIds:
     gatewayConfigContract: "0x9a5a3bc4"
     ethereumAclContract: "0x8456cb59"
-  # Call data to use to pause Token minting
-  tokenPauserSetWrapperContractCallData: "0x0bdf12f100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000"
   devnet:
     gatewayConfigContractAddress: "0x530749d571beBEc20980425557968cabc6328296"
     ethereumAclContractAddress: "0xBCA6F8De823a399Dc431930FD5EE550Bf1C0013e"
