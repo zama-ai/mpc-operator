@@ -26,19 +26,22 @@ config:
   pauseMethodIds:
     gatewayConfigContract: "0x9a5a3bc4"
     ethereumAclContract: "0x8456cb59"
-  # Method to check if the contracts are paused.
-  pausedMethodIds:
-    ethereumAclContract: "0x5c975abb"
+  # Call data to use to pause Token minting
+  tokenPauserSetWrapperContractCallData: "0x0bdf12f100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000"
   devnet:
     gatewayConfigContractAddress: "0x530749d571beBEc20980425557968cabc6328296"
     ethereumAclContractAddress: "0xBCA6F8De823a399Dc431930FD5EE550Bf1C0013e"
+    ethereumTokenPauserSetWrapperAddress: ""
   testnet:
     gatewayConfigContractAddress: "0x94153006067B89399e059284f5a7Fe016940E332"
     ethereumAclContractAddress: "0xf0Ffdc93b7E186bC2f8CB3dAA75D86d1930A433D"
+    ethereumTokenAddress: "0xa798B04149e7a61cc95B7D114AD420e8969eA268"
+    ethereumTokenPauserSetWrapperAddress: "0xEd03Be6711787f3068885137723504a075514040"
   mainnet:
     gatewayConfigContractAddress: "0xDE537Be194777A56f8B19d14079E6a78249390ab"
     ethereumAclContractAddress: "0xcA2E8f1F656CD25C01F05d0b243Ab1ecd4a8ffb6"
-
+    ethereumTokenAddress: "0xA12CC123ba206d4031D1c7f6223D1C2Ec249f4f3"
+    ethereumTokenPauserSetWrapperAddress: "0x08940bC8944A17E64AA9F5398046ABc75bB26699"
 env:
   - name: GATEWAY_RPC_URL
     valueFrom:
@@ -76,6 +79,12 @@ image:
 
 imagePullSecrets:
 #  - name: registry-credentials
+
+zamaProtocolPause:
+  enabled: true
+
+zamaTokenPause:
+  enabled: true
 
 cronjob:
   enabled: true
