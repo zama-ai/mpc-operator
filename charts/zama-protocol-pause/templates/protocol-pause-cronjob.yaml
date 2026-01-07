@@ -87,7 +87,7 @@ spec:
                   cast balance ${PAUSER_ADDRESS} --rpc-url ${GATEWAY_RPC_URL}
                   echo "=================================================="
                   echo "Get Ethereum (Host) {{ .Values.network | title }} paused status:"
-                  ETH_CONTRACTS_PAUSED_STATUS=$(cast call ${ETHEREUM_ACL_CONTRACT_ADDRESS} ${ETHEREUM_ACL_CONTRACT_PAUSED_METHOD_ID} --rpc-url ${ETHEREUM_RPC_URL})
+                  ETH_CONTRACTS_PAUSED_STATUS=$(cast call ${ETHEREUM_ACL_CONTRACT_ADDRESS} "paused()" --rpc-url ${ETHEREUM_RPC_URL})
                   if [ "${ETH_CONTRACTS_PAUSED_STATUS}" = "0x0000000000000000000000000000000000000000000000000000000000000000" ]; then
                     echo "${ETH_CONTRACTS_PAUSED_STATUS} (Ethereum Contracts are *not* paused)"
                   else
@@ -126,8 +126,6 @@ spec:
                 {{- end }}
                 - name: ETHEREUM_ACL_CONTRACT_PAUSE_METHOD_ID
                   value: {{ .Values.config.pauseMethodIds.ethereumAclContract | quote }}
-                - name: ETHEREUM_ACL_CONTRACT_PAUSED_METHOD_ID
-                  value: {{ .Values.config.pausedMethodIds.ethereumAclContract | quote }}
                 - name: GATEWAY_CONFIG_CONTRACT_PAUSE_METHOD_ID
                   value: {{ .Values.config.pauseMethodIds.gatewayConfigContract | quote }}
               {{- with .Values.env }}
