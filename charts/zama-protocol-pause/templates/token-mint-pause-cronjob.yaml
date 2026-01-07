@@ -98,7 +98,7 @@ spec:
                   {{- else }}
                   if [ "${ETH_TOKEN_MINT_PAUSED_STATUS}" = "0x0000000000000000000000000000000000000000000000000000000000000000" ]; then
                     echo "Pause Zama Token Mint on {{ .Values.network | title }}"
-                    cast send {{ if .Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} ${ETHEREUM_TOKEN_PAUSER_SET_WRAPPER_ADDRESS} --data ${ETHEREUM_TOKEN_PAUSER_SET_WRAPPER_PAUSE_CALL_DATA} --rpc-url ${ETHEREUM_RPC_URL}
+                    cast send {{ if .Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} ${ETHEREUM_TOKEN_PAUSER_SET_WRAPPER_ADDRESS} "callFunction(bytes)" 0x --rpc-url ${ETHEREUM_RPC_URL}
                   fi
                   {{- end }}
               env:
@@ -121,8 +121,6 @@ spec:
                 - name: ETHEREUM_TOKEN_PAUSER_SET_WRAPPER_ADDRESS
                   value: {{ .ethereumTokenPauserSetWrapperAddress | quote }}
                 {{- end }}
-                - name: ETHEREUM_TOKEN_PAUSER_SET_WRAPPER_PAUSE_CALL_DATA
-                  value: {{ .Values.config.tokenPauserSetWrapperContractCallData | quote }}
               {{- with .Values.env }}
                 {{- toYaml . | nindent 16 }}
               {{- end }}

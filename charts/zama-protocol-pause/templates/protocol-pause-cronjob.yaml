@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "zama-protocol-pause.fullname" . }}
+  name: {{ include "zama-protocol-pause.fullname" . }}-contracts
   namespace: {{ include "zama-protocol-pause.namespace" . }}
   labels:
     {{- include "zama-protocol-pause.labels" . | nindent 4 }}
