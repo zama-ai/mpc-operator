@@ -34,7 +34,7 @@ kmsConnectorDbMigration:
   enabled: true
   image:
     name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/db-migration
-    tag: v0.10.0
+    tag: v0.10.7
   env: []
   affinity:
     nodeAffinity:
@@ -56,8 +56,8 @@ kmsConnectorGwListener:
   nameOverride: kms-connector-gw-listener
   image:
     name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/gw-listener
-    tag: v0.10.0
-  replicas: 2
+    tag: v0.10.7
+  replicas: 1
   config:
     # Use full node
     gatewayUrl: "http://gateway-node:8547"
@@ -81,7 +81,7 @@ kmsConnectorKmsWorker:
   nameOverride: kms-connector-kms-worker
   image:
     name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/kms-worker
-    tag: v0.10.0
+    tag: v0.10.7
   replicas: 1
   config:
     kmsCoreEndpoints: "http://kms-core:50100"
@@ -104,19 +104,17 @@ kmsConnectorTxSender:
   enabled: true
   nameOverride: kms-connector-tx-sender
   image:
-    name: hub.zama.ai/zama-protocol/zama-ai/fhevm/kms-connector/tx-sender
-    tag: v0.9.3
+    name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/tx-sender
+    tag: v0.10.7
   replicas: 1
+  serviceAccountName: mpc-party-connector
   wallet:
+    # Use the kms-connector tx-sender KMS key as ethereum wallet
     awsKms:
       enabled: true
       configmap:
         name: mpc-party
         key: KMS_CONNECTOR__TX_SENDER_AWS_KMS_KEY_ID
-    # The secret can be removed after migrating to AWS KMS
-    #secret:
-    #  name: connector-wallet-keys
-    #  key: kms_txsender_1.private_key
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
