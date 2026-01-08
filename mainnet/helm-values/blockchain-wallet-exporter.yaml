@@ -1,0 +1,166 @@
+replicaCount: 1
+
+image:
+  # Public image
+  repository: ghcr.io/zama-ai/blockchain-wallet-exporter/blockchain-wallet-exporter
+  pullPolicy: IfNotPresent
+  tag: v0.1.5
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Application-specific configuration
+app:
+  configPath: /etc/config/config.yaml
+  configMountPath: /etc/config
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  # If not set and create is true, a name is generated using the fullname template.
+  name: ""
+
+# This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+podAnnotations: {}
+# This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 9091
+  portName: metrics
+
+ingress:
+  enabled: false
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+livenessProbe:
+  httpGet:
+    path: /metrics
+    port: metrics
+readinessProbe:
+  httpGet:
+    path: /metrics
+    port: metrics
+
+serviceMonitor:
+  enabled: true
+  labels: {}
+  path: /metrics
+  interval: 30s
+  scrapeTimeout: 10s
+  namespace: ""
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+env:
+  - name: GW_CONDUIT_RPC_HTTP_URL
+    valueFrom:
+      secretKeyRef:
+        name: conduit
+        key: conduit-rpc-http-url
+
+# Application configuration - mirrors config.yaml structure
+config:
+  global:
+    environment: development
+    metricsAddr: ":9091"
+    logLevel: debug
+    
+  
+  nodes:
+    - name: gw-blockchain-node
+      module: evm
+      httpAddrEnv: "GW_CONDUIT_RPC_HTTP_URL"
+      autoRefund:
+        enabled: false
+        # schedule: "@every 1m"
+        # faucetUrl: "http://gw-faucet-custom-zama-mainnet-powfaucet.gw-blockchain:8080"
+  
+      # unit can be wei, gwei, eth
+      unit: wei
+      metricsUnit: eth
+      httpSSLVerify: false
+      accounts:
+        - address: "0x711EBE8aA590f9C9904ff279239E89dB2eFbC890"
+          name: mpc-connector-1
+        - address: "0xB4CE988D382425F64c99A352375F72A5f1cf6FFB"
+          name: mpc-connector-2
+        - address: "0x4eC7200E392B97913cbD6d8160B011406EB019F1"
+          name: mpc-connector-3
+        - address: "0xEd1D622bd59d657580aBAc65312b40B4B2dA6236"
+          name: mpc-connector-4
+        - address: "0x74a1E2e87a4026b7B8b5252c747E514159515e9a"
+          name: mpc-connector-5
+        - address: "0x0e25B8DB74c754C8275C0B219ba2A6CD7c59E31D"
+          name: mpc-connector-6
+        - address: "0x577Fd21e4BC7D644A4177C4B89146e1Ab394De04"
+          name: mpc-connector-7
+        - address: "0xbaac6F9DD84bFB303F05B4DE45A88Eec86855BD0"
+          name: mpc-connector-8
+        - address: "0x43e4c21cf9d24Dc5b4e00031349EC213A2ba8340"
+          name: mpc-connector-9
+        - address: "0xC105B5933446658D226582f7A112F49a70b54364"
+          name: mpc-connector-10
+        - address: "0xbcF4943A856497FB2345409D35f4d1eae9A0363E"
+          name: mpc-connector-11
+        - address: "0xD227C4B573800EdA3bAdA6DAC872E9134E012e6D"
+          name: mpc-connector-12
+        - address: "0x487e41623b7FeB464ff79F7326DCa791c9a1c5EC"
+          name: mpc-connector-13
+      labels:
+        env: zama-mainnet
+        type_chain: "gateway-chain"
+        chainid: "261131"
+  
+    # Example of how to add an ERC20 wallet
+    # - name: gw-blockchain-node-erc20
+    #   module: erc20
+    #   httpAddr: "https://rpc-zama-gateway-mainnet.t.conduit.xyz"
+    #   autoUnitDiscovery: true
+    #   # zama OFT contract address
+    #   contractAddress: "0xcE762c7FDaac795D31a266B9247F8958c159c6d4"
+    #   autoRefund:
+    #     enabled: false
+    #   httpSSLVerify: false
+    #   accounts:
+    #     # - address: "your-erc20-wallet-addresss"
+    #     #   name: erc20-wallet
+    #   labels:
+    #     env: zama-mainnet
+    #     type_chain: "gateway-chain"
+    #     chainid: "261131"
+  

@@ -13,6 +13,9 @@ repositories:
   - name: zama-fhevm
     url: hub.zama.org/zama-protocol/zama-ai/fhevm/charts
     oci: true
+  - name: blockchain-wallet-exporter
+    url: ghcr.io/zama-ai/blockchain-wallet-exporter/charts
+    oci: true
   - name: arbitrum
     url: https://charts.arbitrum.io
 releases:
@@ -34,3 +37,10 @@ releases:
     version: 1.2.0
     values:
       - helm-values/kms-connector.yaml
+  # Optional: Blockchain Wallet Exporter
+  # - name: blockchain-wallet-exporter
+  #   namespace: observability
+  #   chart: blockchain-wallet-exporter
+  #   version: 0.1.2
+  #   values:
+  #     - helm-values/blockchain-wallet-exporter.yaml
