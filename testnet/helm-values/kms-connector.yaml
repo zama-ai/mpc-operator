@@ -34,7 +34,7 @@ kmsConnectorDbMigration:
   enabled: true
   image:
     name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/db-migration
-    tag: v0.10.7
+    tag: v0.10.8
   env: []
   affinity:
     nodeAffinity:
@@ -56,7 +56,7 @@ kmsConnectorGwListener:
   nameOverride: kms-connector-gw-listener
   image:
     name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/gw-listener
-    tag: v0.10.7
+    tag: v0.10.8
   replicas: 1
   config:
     # Use full node
@@ -81,7 +81,7 @@ kmsConnectorKmsWorker:
   nameOverride: kms-connector-kms-worker
   image:
     name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/kms-worker
-    tag: v0.10.7
+    tag: v0.10.8
   replicas: 1
   config:
     kmsCoreEndpoints: "http://kms-core:50100"
@@ -105,7 +105,7 @@ kmsConnectorTxSender:
   nameOverride: kms-connector-tx-sender
   image:
     name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/tx-sender
-    tag: v0.10.7
+    tag: v0.10.8
   replicas: 1
   serviceAccountName: mpc-party-connector
   wallet:

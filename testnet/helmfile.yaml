@@ -19,7 +19,7 @@ releases:
   - name: kms-core
     namespace: kms-decentralized
     chart: zama-kms/kms-core
-    version: 1.4.10
+    version: 1.4.17
     values:
       - helm-values/kms-core.yaml
   - name: gateway-node
