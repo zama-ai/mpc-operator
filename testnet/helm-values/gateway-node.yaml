@@ -2,7 +2,7 @@ fullnameOverride: "gateway-node"
 
 image:
   repository: offchainlabs/nitro-node
-  tag: v3.9.2-52e8959
+  tag: v3.9.5-66e42c4
 
 # https://docs.arbitrum.io/run-arbitrum-node/run-full-node
 customArgs:
