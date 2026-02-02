@@ -1,6 +1,6 @@
 image:
   repository: offchainlabs/nitro-node
-  tag: v3.7.6-c0fe95e
+  tag: v3.9.5-66e42c4
 
 # https://docs.arbitrum.io/run-arbitrum-node/run-full-node
 customArgs:
