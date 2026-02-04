@@ -14,6 +14,7 @@ customArgs:
   - "ws.origins=*"
   - "ws.rpcprefix=/"
   - "http.api=net,web3,eth,debug,txpool"
+  - "node.staker.enable=false"
 
 persistence:
   enabled: true
@@ -56,8 +57,7 @@ configmap:
     chain:
       id: 10901
       name: conduit-orbit-deployer
-      # Note: {"parent-chain-is-arbitrum": true} added to JSON
-      info-json: '[{"parent-chain-is-arbitrum": true, "chain-id":10901,"parent-chain-id":421614,"chain-name":"conduit-orbit-deployer","chain-config":{"chainId":10901,"homesteadBlock":0,"daoForkBlock":null,"daoForkSupport":true,"eip150Block":0,"eip150Hash":"0x0000000000000000000000000000000000000000000000000000000000000000","eip155Block":0,"eip158Block":0,"byzantiumBlock":0,"constantinopleBlock":0,"petersburgBlock":0,"istanbulBlock":0,"muirGlacierBlock":0,"berlinBlock":0,"londonBlock":0,"clique":{"period":0,"epoch":0},"arbitrum":{"EnableArbOS":true,"AllowDebugPrecompiles":false,"DataAvailabilityCommittee":true,"InitialArbOSVersion":40,"InitialChainOwner":"0x20f9028611a93Aa9e7c33b5E54E0213AF0B29f52","GenesisBlockNum":0}},"rollup":{"bridge":"0x80Fe84709e141F58FA971B2F3Fe04Fe905f35c60","inbox":"0x41Ba31333ADDf810233aDb40b0C58b18320Ca592","sequencer-inbox":"0x4f96104A72d7282daDF7B2d3Bff44E5dBa400FF4","rollup":"0x6d679f12Dc6c65be565126a8B101605912b351De","validator-utils":"0xf4CeeF5CA1a0aFE028E2C9A0F2535BcD599063fC","validator-wallet-creator":"0xdb54B7Eb16aF05Af999DA00100BeBAFf2D8350dD","deployed-at":200763820}}]'
+      info-json: '[{"chain-id":10900,"parent-chain-id":421614,"chain-name":"conduit-orbit-deployer","chain-config":{"chainId":10900,"homesteadBlock":0,"daoForkBlock":null,"daoForkSupport":true,"eip150Block":0,"eip150Hash":"0x0000000000000000000000000000000000000000000000000000000000000000","eip155Block":0,"eip158Block":0,"byzantiumBlock":0,"constantinopleBlock":0,"petersburgBlock":0,"istanbulBlock":0,"muirGlacierBlock":0,"berlinBlock":0,"londonBlock":0,"clique":{"period":0,"epoch":0},"arbitrum":{"EnableArbOS":true,"AllowDebugPrecompiles":false,"DataAvailabilityCommittee":true,"InitialArbOSVersion":40,"InitialChainOwner":"0x23d12D454A7dd8C6c20a978F9c4f8545b7760f6D","GenesisBlockNum":0}},"rollup":{"bridge":"0x9F23e42c12E81B989c2D707393EEb667A627c6ED","inbox":"0x5E38ed75D268Af3dA3207f8B9b743D7C21419731","sequencer-inbox":"0x3fD0b6a2f4927f01976e8AB7a030fB3e9F451f12","rollup":"0xAB4aD374B634ae5437363A26F94370cCf7BB7925","validator-wallet-creator":"0xdb54B7Eb16aF05Af999DA00100BeBAFf2D8350dD","deployed-at":197395758,"stake-token":"0x980B62Da83eFf3D4576C647993b0c1D7faf17c73"}}]'
     execution:
       # Uncomment to make node an archive node
       #caching: archive
