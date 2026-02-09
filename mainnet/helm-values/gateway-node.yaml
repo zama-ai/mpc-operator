@@ -12,6 +12,7 @@ customArgs:
   - "ws.origins=*"
   - "ws.rpcprefix=/"
   - "http.api=net,web3,eth,debug,txpool"
+  - "node.staker.enable=false"
 
 persistence:
   enabled: true
@@ -70,7 +71,7 @@ configmap:
       id: 261131
       name: conduit-orbit-deployer
       # Note: {"parent-chain-is-arbitrum": true} added to JSON
-      info-json: '[{"parent-chain-is-arbitrum": true, "chain-id":261131,"parent-chain-id":42161,"chain-name":"conduit-orbit-deployer","chain-config":{"chainId":261131,"homesteadBlock":0,"daoForkBlock":null,"daoForkSupport":true,"eip150Block":0,"eip150Hash":"0x0000000000000000000000000000000000000000000000000000000000000000","eip155Block":0,"eip158Block":0,"byzantiumBlock":0,"constantinopleBlock":0,"petersburgBlock":0,"istanbulBlock":0,"muirGlacierBlock":0,"berlinBlock":0,"londonBlock":0,"clique":{"period":0,"epoch":0},"arbitrum":{"EnableArbOS":true,"AllowDebugPrecompiles":false,"DataAvailabilityCommittee":true,"InitialArbOSVersion":40,"InitialChainOwner":"0xe27Bf67F0D2169B757267Ae5a1A27f91FD6660b8","GenesisBlockNum":0}},"rollup":{"bridge":"0xB95b70f48C9F45293d1EE6670d0C5D8D4F045e46","inbox":"0x893a8A0d0FC49cEA7d27dac7E5Ab760639A041C7","sequencer-inbox":"0xAe7B43ec6f8d0EccebB7879Ddc42dab57b75654D","rollup":"0xdC10dD8E1Ff27563c1721f0B0aBc55d3e8e100d4","validator-utils":"0x08Ca9925b88c54100568c8d41eFAF8Fecc695d3a","validator-wallet-creator":"0x27a722f5Ba1E7119a48A990eE5C262413249eB2B","deployed-at":391581390}}]'
+      info-json: '[{"chain-id":261131,"parent-chain-id":42161,"chain-name":"conduit-orbit-deployer","chain-config":{"chainId":261131,"homesteadBlock":0,"daoForkBlock":null,"daoForkSupport":true,"eip150Block":0,"eip150Hash":"0x0000000000000000000000000000000000000000000000000000000000000000","eip155Block":0,"eip158Block":0,"byzantiumBlock":0,"constantinopleBlock":0,"petersburgBlock":0,"istanbulBlock":0,"muirGlacierBlock":0,"berlinBlock":0,"londonBlock":0,"clique":{"period":0,"epoch":0},"arbitrum":{"EnableArbOS":true,"AllowDebugPrecompiles":false,"DataAvailabilityCommittee":true,"InitialArbOSVersion":40,"InitialChainOwner":"0xe27Bf67F0D2169B757267Ae5a1A27f91FD6660b8","GenesisBlockNum":0}},"rollup":{"bridge":"0xB95b70f48C9F45293d1EE6670d0C5D8D4F045e46","inbox":"0x893a8A0d0FC49cEA7d27dac7E5Ab760639A041C7","sequencer-inbox":"0xAe7B43ec6f8d0EccebB7879Ddc42dab57b75654D","rollup":"0x92EE92a148cf8431424dB3fB55AB12934B0AF1a6","validator-wallet-creator":"0x27a722f5Ba1E7119a48A990eE5C262413249eB2B","deployed-at":391581390,"stake-token":"0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"}}]'
     execution:
       # Overridden by env var for authenticated RPC
       #forwarding-target: "https://rpc-zama-gateway-mainnet.t.conduit.xyz"
