@@ -34,7 +34,7 @@ kmsConnectorDbMigration:
   enabled: true
   image:
     name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/db-migration
-    tag: v0.10.8
+    tag: v0.11
   env: []
   affinity:
     nodeAffinity:
@@ -56,7 +56,7 @@ kmsConnectorGwListener:
   nameOverride: kms-connector-gw-listener
   image:
     name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/gw-listener
-    tag: v0.10.8
+    tag: v0.11
   replicas: 1
   config:
     # Use full node
@@ -81,9 +81,19 @@ kmsConnectorKmsWorker:
   nameOverride: kms-connector-kms-worker
   image:
     name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/kms-worker
-    tag: v0.10.8
+    tag: v0.11
   replicas: 1
+  env:
+    - name: ETHEREUM_RPC_URL
+      valueFrom:
+        secretKeyRef:
+          name: rpc
+          key: ethereum-rpc-url
   config:
+    hostChains:
+      - url: "$(ETHEREUM_RPC_URL)"
+        chainId: 11155111
+        aclAddress: "0xf0Ffdc93b7E186bC2f8CB3dAA75D86d1930A433D"
     kmsCoreEndpoints: "http://kms-core:50100"
   affinity:
     nodeAffinity:
@@ -105,7 +115,7 @@ kmsConnectorTxSender:
   nameOverride: kms-connector-tx-sender
   image:
     name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/tx-sender
-    tag: v0.10.8
+    tag: v0.11
   replicas: 1
   serviceAccountName: mpc-party-connector
   wallet:

@@ -10,13 +10,23 @@ kmsCore:
   nameOverride: kms-core
   image:
     name: hub.zama.org/zama-protocol/zama-ai/kms/core-service-enclave
-    tag: v0.12.7
+    tag: v0.13
   serviceAccountName: mpc-party
   envFrom:
     configmap:
       name: mpc-party
   thresholdMode:
     enabled: true
+    trustedReleases:
+     # KMS Core v0.12.7
+     - pcr0: "5695392a1772c4832fe6b1153e36af6ca302a5b524b63398079164541d5529fc468d2d5fecc12e79fbe441a33d52ba6f"
+       pcr1: "4b4d5b3661b3efc12920900c80e126e4ce783c522de6c02a2a5bf7af3a2b9327b86776f188e4be1c1c404a129dbda493"
+       pcr2: "e299a77ded75a13c060103fa1ed41b5b16946dec3abeb351aabebbe02788cd3425e49a78447da1e5459a4189f877e476"
+     # KMS Core v0.13
+     - pcr0: "e1d51991ce729967f4c4cf2bdce1721fb644e37806b0702af60edc5031c21c13a58bce7029fe8414e27d92032088adbb"
+       pcr1: "4b4d5b3661b3efc12920900c80e126e4ce783c522de6c02a2a5bf7af3a2b9327b86776f188e4be1c1c404a129dbda493"
+       pcr2: "0b9b5a55109eee7ccb784381cbe03ca319d842acd6b280d64f8fd5523550b76d74f7576a115d9fc96d2d0d9c4eddc66f"
+ 
     tls:
       enabled: false
     peersList:
