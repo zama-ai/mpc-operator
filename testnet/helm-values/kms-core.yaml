@@ -10,7 +10,7 @@ kmsCore:
   nameOverride: kms-core
   image:
     name: hub.zama.org/zama-protocol/zama-ai/kms/core-service-enclave
-    tag: v0.13
+    tag: v0.13.2
   serviceAccountName: mpc-party
   envFrom:
     configmap:
@@ -18,7 +18,13 @@ kmsCore:
   thresholdMode:
     enabled: true
     tls:
-      enabled: false
+      enabled: true
+    trustedReleases:
+     # KMS Core v0.13.2
+     - pcr0: "cd2896066896a82ad2c9d87c833ac3ccee8e1d7930913277193a651165c7efe432c32274d2cc0d49d772c10ac719ca29"
+       pcr1: "4b4d5b3661b3efc12920900c80e126e4ce783c522de6c02a2a5bf7af3a2b9327b86776f188e4be1c1c404a129dbda493"
+       pcr2: "db0b41ee919fc3e3b4cbbdcad6df9d39060db2913324639357fca3cd2fcbc351cb827b58e9cefabf2413e336fa23f035"
+ 
     peersList:
       - id: 1
         host: mpc-node-1
@@ -90,9 +96,15 @@ kmsCore:
   publicVault:
     s3:
       enabled: true
+      # use prefix in order to override the default prefix which is PUB, and to be backwards compatible with the old prefix system
+      # Replace p1 with p{id} where id is the peer id
+      prefix: "PUB-p1"
   privateVault:
     s3:
       enabled: true
+      # use prefix in order to override the default prefix which is PRV, and to be backwards compatible with the old prefix system
+      # Replace p1 with p{id} where id is the peer id
+      prefix: "PRV-p1"
     awskms:
       enabled: true
 
