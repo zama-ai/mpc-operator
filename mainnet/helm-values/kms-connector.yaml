@@ -89,6 +89,10 @@ kmsConnectorKmsWorker:
     tag: v0.10.8
   replicas: 1
   config:
+    hostChains:
+      - url: "$(ETHEREUM_RPC_URL)"
+        chainId: 1
+        aclAddress: "0xcA2E8f1F656CD25C01F05d0b243Ab1ecd4a8ffb6"
     kmsCoreEndpoints: "http://kms-core:50100"
   affinity:
     nodeAffinity:
