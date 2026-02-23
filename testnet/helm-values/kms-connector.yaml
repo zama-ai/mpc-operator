@@ -9,6 +9,11 @@ commonConfig:
     gatewayConfig: "0x94153006067B89399e059284f5a7Fe016940E332"
     kmsGeneration: "0x5779Ac320BbDB267Cc4d1b77195a203F926bBC60"
   env:
+    - name: ETHEREUM_RPC_URL
+      valueFrom:
+        secretKeyRef:
+          name: rpc
+          key: ethereum-rpc-url
     - name: DATABASE_ENDPOINT
       valueFrom:
         secretKeyRef:
