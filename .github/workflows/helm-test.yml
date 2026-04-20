@@ -8,6 +8,10 @@ on:
       - 'charts/**'
       - '.github/workflows/helm-test.yml'
 
+permissions:
+  contents: read
+  packages: read
+
 env:
   HELM_VERSION: v3.16.2
 
