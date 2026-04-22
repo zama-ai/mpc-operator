@@ -10,7 +10,7 @@ kmsCore:
   nameOverride: kms-core
   image:
     name: hub.zama.org/zama-protocol/zama-ai/kms/core-service-enclave
-    tag: v0.13.2
+    tag: v0.13.10
   serviceAccountName: mpc-party
   envFrom:
     configmap:
@@ -19,12 +19,15 @@ kmsCore:
     enabled: true
     tls:
       enabled: true
-    trustedReleases:
-     # KMS Core v0.13.2
-     - pcr0: "cd2896066896a82ad2c9d87c833ac3ccee8e1d7930913277193a651165c7efe432c32274d2cc0d49d772c10ac719ca29"
-       pcr1: "4b4d5b3661b3efc12920900c80e126e4ce783c522de6c02a2a5bf7af3a2b9327b86776f188e4be1c1c404a129dbda493"
-       pcr2: "db0b41ee919fc3e3b4cbbdcad6df9d39060db2913324639357fca3cd2fcbc351cb827b58e9cefabf2413e336fa23f035"
- 
+      trustedReleases:
+        # PCR for version v0.13.3
+        - pcr0: "b22b2ef9a5fef9cfcdddda055a7b4ec2e43b81adbee4a7fd2806346092816674387ea9197d6f7f1a659bfd737644dc8f"
+          pcr1: "4b4d5b3661b3efc12920900c80e126e4ce783c522de6c02a2a5bf7af3a2b9327b86776f188e4be1c1c404a129dbda493"
+          pcr2: "35280f8e32bcf9a4c48019605b0b992a893f4204138a92749e163bb9a27e22ec045c8c013a46dfb3fbe21191a469e3e8"
+        # New PCR for version v0.13.10
+        - pcr0: "4b2211c37a2809be8e9e984ebd0a7d50e932f43b17e66f329cf312e69927c517c77e4561781115888f4148befac2af55"
+          pcr1: "4b4d5b3661b3efc12920900c80e126e4ce783c522de6c02a2a5bf7af3a2b9327b86776f188e4be1c1c404a129dbda493"
+          pcr2: "013b0129cd37065b4a9fcd31c59ec1abe81b0c67c6dd22e5321accd7ec6cc86a45247979c594a01f20fe7452ea25d2b3"
     peersList:
       - id: 1
         host: mpc-node-1
@@ -93,6 +96,15 @@ kmsCore:
       effect: NoSchedule
       operator: Equal
       value: "true"
+  backupVault:
+    s3:
+      enabled: true
+      bucket: <AWS_S3_BACKUP_BUCKET_NAME>
+      prefix: backup
+    awskms:
+      enabled: true
+      rootKeyId: arn:aws:kms:eu-west-1:<AWS_ACCOUNT_ID>:key/<AWS_KMS_KEY_ID>
+      rootKeySpec: asymm
   publicVault:
     s3:
       enabled: true

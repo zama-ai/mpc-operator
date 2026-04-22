@@ -8,6 +8,13 @@ commonConfig:
     decryption: "0x5D8BD78e2ea6bbE41f26dFe9fdaEAa349e077478"
     gatewayConfig: "0x94153006067B89399e059284f5a7Fe016940E332"
     kmsGeneration: "0x5779Ac320BbDB267Cc4d1b77195a203F926bBC60"
+  # Ethereum chain RPC node endpoint (HTTP)
+  ethereumUrl: "$(ETHEREUM_RPC_URL)"
+  # Ethereum chain identifier
+  ethereumChainId: "11155111"
+  # Ethereum smart contract addresses
+  ethereumContractAddresses:
+    kmsVerifier: "$(KMS_VERIFIER_CONTRACT_ADDRESS)"
   env:
     - name: ETHEREUM_RPC_URL
       valueFrom:
@@ -34,12 +41,16 @@ commonConfig:
         secretKeyRef:
           name: conduit
           key: conduit-rpc-http-url
+    - name: ACL_CONTRACT_ADDRESS
+      value: '0xf0Ffdc93b7E186bC2f8CB3dAA75D86d1930A433D'
+    - name: KMS_VERIFIER_CONTRACT_ADDRESS
+      value: '0xbE0E383937d564D7FF0BC3b46c51f0bF8d5C311A'
 
 kmsConnectorDbMigration:
   enabled: true
   image:
     name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/db-migration
-    tag: v0.11
+    tag: v0.12.0
   env: []
   affinity:
     nodeAffinity:
@@ -61,7 +72,7 @@ kmsConnectorGwListener:
   nameOverride: kms-connector-gw-listener
   image:
     name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/gw-listener
-    tag: v0.11
+    tag: v0.12.0
   replicas: 1
   config:
     # Use full node
@@ -86,7 +97,7 @@ kmsConnectorKmsWorker:
   nameOverride: kms-connector-kms-worker
   image:
     name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/kms-worker
-    tag: v0.11
+    tag: v0.12.0
   replicas: 1
   env:
     - name: ETHEREUM_RPC_URL
@@ -95,11 +106,11 @@ kmsConnectorKmsWorker:
           name: rpc
           key: ethereum-rpc-url
   config:
+    kmsCoreEndpoints: "http://kms-core:50100"
     hostChains:
       - url: "$(ETHEREUM_RPC_URL)"
         chainId: 11155111
-        aclAddress: "0xf0Ffdc93b7E186bC2f8CB3dAA75D86d1930A433D"
-    kmsCoreEndpoints: "http://kms-core:50100"
+        aclAddress: "$(ACL_CONTRACT_ADDRESS)"
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -120,7 +131,7 @@ kmsConnectorTxSender:
   nameOverride: kms-connector-tx-sender
   image:
     name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/tx-sender
-    tag: v0.11
+    tag: v0.12.0
   replicas: 1
   serviceAccountName: mpc-party-connector
   wallet:
