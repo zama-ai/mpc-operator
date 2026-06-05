@@ -1,0 +1,48 @@
+# =============================================================================
+# erpc-base.yaml — Minimal eRPC configuration
+# =============================================================================
+# Baseline config with sane defaults for server, metrics, and rate limiting.
+# No projects, networks, or upstreams defined — add them via Helm value
+# overrides (.Values.config) or a full replacement (--set-file configFile=).
+#
+# This file is the default baseConfig in the Helm chart.
+# =============================================================================
+
+# =============================================================================
+# SERVER
+# =============================================================================
+server:
+  httpHostV4: 0.0.0.0
+  httpPortV4: 4000
+  maxTimeout: 30s
+  enableGzip: true
+
+# =============================================================================
+# METRICS (Prometheus)
+# =============================================================================
+metrics:
+  enabled: true
+  hostV4: 0.0.0.0
+  port: 4001
+
+# =============================================================================
+# RATE LIMITERS
+# =============================================================================
+rateLimiters:
+  store:
+    driver: memory
+  budgets:
+    - id: default-budget
+      rules:
+        - method: "*"
+          maxCount: 10000000
+          period: second
+
+# =============================================================================
+# PROJECTS
+# =============================================================================
+# No projects defined by default. Add projects/networks/upstreams via Helm
+# value overrides (.Values.config) or a full replacement
+# (--set-file configFile=path/to/erpc.yaml).
+# =============================================================================
+projects: []

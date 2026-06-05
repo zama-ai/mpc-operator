@@ -1,0 +1,25 @@
+{{/*
+eRPC ConfigMap.
+  Base config: config/<baseConfig> (bundled in the chart, default erpc-base.yaml).
+  Partial overrides: .Values.config (dict) is deep-merged on top.
+  Full replacement: --set-file configFile=path/to/full-config.yaml
+*/}}
+{{- $erpcRaw := .Files.Get (printf "config/%s" .Values.baseConfig) }}
+{{- if .Values.configFile }}
+  {{- $erpcRaw = .Values.configFile }}
+{{- end }}
+{{- if not $erpcRaw }}
+  {{- fail (printf "erpc: base config %q not found in chart config/ directory" .Values.baseConfig) }}
+{{- end }}
+{{- $base := $erpcRaw | fromYaml }}
+{{- $overrides := .Values.config | default dict }}
+{{- $merged := mergeOverwrite $base $overrides }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "erpc.fullname" . }}
+  labels:
+    {{- include "erpc.labels" . | nindent 4 }}
+data:
+  erpc.yaml: |
+    {{- toYaml $merged | nindent 4 }}
