@@ -1,0 +1,9 @@
+apiVersion: v2
+name: erpc
+description: >-
+  Standalone Helm chart for the eRPC proxy (https://github.com/erpc/erpc).
+  Deploys an eRPC instance providing RPC load balancing, failover, and caching,
+  configured from a bundled base profile with deep-merged overrides.
+type: application
+version: 0.1.0
+appVersion: "0.0.63"
