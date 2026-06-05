@@ -56,8 +56,7 @@ args:
 #   2. config               (this block — deep-merged on top)
 #
 # Available profiles in config/:
-#   erpc-base.yaml    minimal defaults, no networks/upstreams (default)
-#   erpc-public.yaml  public nodes, listener-indexer tuned
+#   erpc-base.yaml    minimal defaults, no projects/networks/upstreams (default)
 # ---------------------------------------------------------------------------
 # -- Base eRPC config profile (must exist as a file in charts/erpc/config/).
 baseConfig: erpc-base.yaml

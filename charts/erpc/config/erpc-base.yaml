@@ -2,8 +2,8 @@
 # erpc-base.yaml — Minimal eRPC configuration
 # =============================================================================
 # Baseline config with sane defaults for server, metrics, and rate limiting.
-# No networks or upstreams defined — those are added by profile-specific
-# configs (erpc-public.yaml, erpc-gateway.yaml) or via Helm value overrides.
+# No projects, networks, or upstreams defined — add them via Helm value
+# overrides (.Values.config) or a full replacement (--set-file configFile=).
 #
 # This file is the default baseConfig in the Helm chart.
 # =============================================================================
@@ -39,43 +39,10 @@ rateLimiters:
           period: second
 
 # =============================================================================
-# PROJECT
+# PROJECTS
 # =============================================================================
-# Single project with generic defaults. Override via Helm values (.erpc.config)
-# or use a profile-specific config (--set erpc.baseConfig=erpc-public.yaml).
+# No projects defined by default. Add projects/networks/upstreams via Helm
+# value overrides (.Values.config) or a full replacement
+# (--set-file configFile=path/to/erpc.yaml).
 # =============================================================================
-projects:
-  - id: main
-    networkDefaults:
-      directiveDefaults:
-        retryEmpty: true
-        retryPending: false
-      failsafe:
-        - matchMethod: "*"
-          timeout:
-            duration: 15s
-          retry:
-            maxAttempts: 3
-            delay: 500ms
-            backoffMaxDelay: 5s
-            backoffFactor: 2.0
-            jitter: 200ms
-    upstreamDefaults:
-      jsonRpc:
-        supportsBatch: true
-        batchMaxSize: 100
-        batchMaxWait: 50ms
-      failsafe:
-        - matchMethod: "*"
-          timeout:
-            duration: 10s
-          retry:
-            maxAttempts: 2
-            delay: 300ms
-          circuitBreaker:
-            failureThresholdCount: 10
-            failureThresholdCapacity: 20
-            halfOpenAfter: 30s
-            successThresholdCount: 3
-            successThresholdCapacity: 5
-    networks: []
+projects: []

@@ -1,7 +1,6 @@
 {{/*
 eRPC ConfigMap.
-  Base config: config/<baseConfig> (bundled in the chart).
-  Pick the profile at install time (erpc-base.yaml, erpc-public.yaml, ...).
+  Base config: config/<baseConfig> (bundled in the chart, default erpc-base.yaml).
   Partial overrides: .Values.config (dict) is deep-merged on top.
   Full replacement: --set-file configFile=path/to/full-config.yaml
 */}}

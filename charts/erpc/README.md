@@ -22,8 +22,7 @@ eRPC config is built from a **base profile file + deep-merge** pattern. Canonica
 
 ```
 charts/erpc/config/
-  erpc-base.yaml     # minimal defaults, no networks/upstreams
-  erpc-public.yaml   # public nodes, listener-indexer tuned
+  erpc-base.yaml     # minimal defaults, no projects/networks/upstreams
 ```
 
 > **Note on storage:** unlike the FHEVM `listener` chart (which symlinks these files from a `listener/config/` source dir), this chart stores the config files **as real files** inside `config/`. The files live outside `templates/` because anything under `templates/` is rendered as a Go template and would break raw YAML. When the upstream eRPC config changes, copy the updated file into `config/` and bump `Chart.yaml` version.
@@ -41,11 +40,10 @@ Select a profile with `baseConfig`:
 
 | Profile | File | Use case |
 |---------|------|----------|
-| `erpc-base.yaml` | Minimal defaults | Standalone eRPC for generic apps (default) |
-| `erpc-public.yaml` | Public nodes, listener-tuned | Listener clusters using public RPC endpoints |
+| `erpc-base.yaml` | Minimal defaults, empty `projects` | Standalone eRPC for generic apps (default) |
 
 ```yaml
-baseConfig: erpc-base.yaml   # or erpc-public.yaml
+baseConfig: erpc-base.yaml
 ```
 
 ### Adding a new profile
@@ -59,7 +57,6 @@ baseConfig: erpc-base.yaml   # or erpc-public.yaml
 Use `config` to deep-merge overrides on top of the base profile without replacing the whole config:
 
 ```yaml
-baseConfig: erpc-public.yaml
 config:
   logLevel: info
   server:
