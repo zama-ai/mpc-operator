@@ -77,6 +77,19 @@ helm install erpc charts/erpc \
 
 This ignores both `baseConfig` and `config` overrides.
 
+### Autoscaling
+
+Enable a HorizontalPodAutoscaler (`autoscaling/v2`) to scale eRPC on CPU and/or memory utilization. Requires a metrics-server in the cluster, and the container must declare matching resource requests (it does by default — see `resources`), since utilization targets are computed against requests. When enabled, the Deployment's `replicas` field is omitted so the HPA owns the replica count.
+
+```yaml
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80   # optional
+```
+
 ### Metrics
 
 Enable a `ServiceMonitor` to scrape the eRPC Prometheus metrics port (`4001`):
@@ -93,7 +106,12 @@ metrics:
 |-----|---------|-------------|
 | `image.repository` | `ghcr.io/erpc/erpc` | eRPC container image |
 | `image.tag` | `""` (uses appVersion) | Image tag override |
-| `replicas` | `1` | eRPC replica count |
+| `replicas` | `1` | eRPC replica count (ignored when `autoscaling.enabled`) |
+| `autoscaling.enabled` | `false` | Create a HorizontalPodAutoscaler (`autoscaling/v2`) |
+| `autoscaling.minReplicas` / `autoscaling.maxReplicas` | `1` / `5` | HPA replica bounds |
+| `autoscaling.targetCPUUtilizationPercentage` | `80` | Target average CPU utilization |
+| `autoscaling.targetMemoryUtilizationPercentage` | `""` | Target average memory utilization (empty = disabled) |
+| `autoscaling.behavior` | `{}` | Optional HPA scaleUp/scaleDown policies |
 | `args` | `[/config/erpc.yaml]` | Container args (config-file path) |
 | `baseConfig` | `erpc-base.yaml` | Base eRPC config profile in `config/` |
 | `config` | `{}` | Partial overrides deep-merged on top of base profile |

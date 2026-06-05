@@ -9,8 +9,34 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
-# -- Number of eRPC replicas
+# -- Number of eRPC replicas. Ignored when autoscaling.enabled is true
+# (the HPA then manages the replica count).
 replicas: 1
+
+# ---------------------------------------------------------------------------
+# Horizontal Pod Autoscaler (autoscaling/v2).
+#
+# Requires a metrics-server (or equivalent) so the HPA can read pod CPU/memory.
+# Utilization-based targets require the container to declare matching resource
+# requests (see `resources` below) — without them the HPA cannot compute
+# utilization and will not scale.
+# ---------------------------------------------------------------------------
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  # Set to scale on memory utilization as well (leave empty to disable).
+  targetMemoryUtilizationPercentage: ""
+  # Optional scaling behavior (scaleUp/scaleDown policies). Example:
+  # behavior:
+  #   scaleDown:
+  #     stabilizationWindowSeconds: 300
+  #     policies:
+  #       - type: Percent
+  #         value: 10
+  #         periodSeconds: 60
+  behavior: {}
 
 # -- CLI arguments passed to the eRPC container. The image's entrypoint is
 # `erpc`, which takes the config-file path as a positional argument. Without

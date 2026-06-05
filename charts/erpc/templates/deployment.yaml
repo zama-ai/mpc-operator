@@ -5,7 +5,9 @@ metadata:
   labels:
     {{- include "erpc.labels" . | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicas | default 1 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "erpc.selectorLabels" . | nindent 6 }}
