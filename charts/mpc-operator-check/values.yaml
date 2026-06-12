@@ -11,10 +11,10 @@ awsCli:
   image:
     # Public image
     # repository: amazon/aws-cli
-    # tag: 2.30.1
+    # tag: 2.35.3
     # Private secure image
     repository: hub.zama.org/zama-protocol/zama.ai/aws-cli
-    tag: "2.30-dev"
+    tag: 2.35-dev
   script: |
     echo "AWS check"
     echo "Listing all files in KMS-Core Public S3 bucket: $KMS_CORE__PUBLIC_VAULT__STORAGE__S3__BUCKET"
@@ -28,8 +28,8 @@ gatewayNode:
     # repository: cgr.dev/chainguard/curl
     # tag: latest-dev
     # Private secure image
-    repository: hub.zama.org/zama-protocol/zama-ai/security-hub/infra/kube-utils
-    tag: v0.4.0
+    repository: hub.zama.org/zama-protocol/zama.ai/curl
+    tag: 8.20-dev
   url: http://gateway-node:8547
 ethWallet:
   enabled: true
@@ -39,7 +39,7 @@ ethWallet:
     # tag: latest
     # Private secure image
     repository: hub.zama.org/zama-protocol/zama-ai/security-hub/infra/eth-foundry
-    tag: 0.3.1
+    tag: v0.4.0
   script: |
     echo "Check KMS Connector wallet"
     echo "KMS-Connector Address:$(cast wallet address --aws)"
@@ -51,7 +51,7 @@ kubectl:
     # tag: latest-dev
     # Private secure image
     repository: hub.zama.org/zama-protocol/zama.ai/kubectl
-    tag: 1.34-dev
+    tag: 1.35-dev
   script: |
     echo "Kubernetes namespace check"
     kubectl get all
@@ -79,7 +79,7 @@ kmsCoreClient:
   enabled: true
   image:
     repository: hub.zama.org/zama-protocol/zama-ai/kms/core-client
-    tag: v0.12.4
+    tag: v0.13.20
   configmap:
     # Need to match the kms-core helm chart configmap (containing kms-server.toml and vaults.toml)
     name: kms-core-config
@@ -89,6 +89,10 @@ kmsCoreClient:
     echo "=================================================="
     echo "KMS-Core enclave config content"
     cat enclave.json
+    echo "=================================================="
+    echo "KMS-Core runtime config (from /config endpoint)"
+    config_json=$(wget -qO- "http://kms-core-${KMS_CORE__THRESHOLD__MY_ID}:9646/config") && printf '%b\n' "$(printf '%s' "$config_json" | sed -e 's/^"//' -e 's/"$//' -e 's/\\"/"/g')" || echo "Failed to fetch /config endpoint"
+    echo ""
     echo "=================================================="
     echo "KMS-Core health check"
     #kms-health-check config --file kms-server.toml
@@ -114,8 +118,8 @@ utils:
     # repository: cgr.dev/chainguard/curl
     # tag: latest-dev
     # Private secure image
-    repository: hub.zama.org/zama-protocol/zama-ai/security-hub/infra/kube-utils
-    tag: 0.4.0-safe
+    repository: hub.zama.org/zama-protocol/zama.ai/kubectl
+    tag: 1.35-dev
   script: |
     echo "Kube Utils check"
   # tail -f /dev/null
