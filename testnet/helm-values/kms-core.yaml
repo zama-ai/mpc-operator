@@ -10,7 +10,7 @@ kmsCore:
   nameOverride: kms-core
   image:
     name: hub.zama.org/zama-protocol/zama-ai/kms/core-service-enclave
-    tag: v0.13.10
+    tag: v0.13.20
   serviceAccountName: mpc-party
   envFrom:
     configmap:
@@ -20,14 +20,14 @@ kmsCore:
     tls:
       enabled: true
       trustedReleases:
-        # PCR for version v0.13.3
-        - pcr0: "b22b2ef9a5fef9cfcdddda055a7b4ec2e43b81adbee4a7fd2806346092816674387ea9197d6f7f1a659bfd737644dc8f"
-          pcr1: "4b4d5b3661b3efc12920900c80e126e4ce783c522de6c02a2a5bf7af3a2b9327b86776f188e4be1c1c404a129dbda493"
-          pcr2: "35280f8e32bcf9a4c48019605b0b992a893f4204138a92749e163bb9a27e22ec045c8c013a46dfb3fbe21191a469e3e8"
-        # New PCR for version v0.13.10
+        # PCR for version v0.13.10
         - pcr0: "4b2211c37a2809be8e9e984ebd0a7d50e932f43b17e66f329cf312e69927c517c77e4561781115888f4148befac2af55"
           pcr1: "4b4d5b3661b3efc12920900c80e126e4ce783c522de6c02a2a5bf7af3a2b9327b86776f188e4be1c1c404a129dbda493"
           pcr2: "013b0129cd37065b4a9fcd31c59ec1abe81b0c67c6dd22e5321accd7ec6cc86a45247979c594a01f20fe7452ea25d2b3"
+        # New PCR for version v0.13.20
+        - pcr0: "c1c5887039806bbd82c8a77892576628e868cef502d692b242b60ee8e66b9b2b7863e201d2b72d15f33c7a248910dd22"
+          pcr1: "4b4d5b3661b3efc12920900c80e126e4ce783c522de6c02a2a5bf7af3a2b9327b86776f188e4be1c1c404a129dbda493"
+          pcr2: "48656bbf30b1a78edc6ad98b3638439a864a603ff0779cf9c06225419809e15dd9df8df7d4e8ae2f532fe9a7ef788b51"
     peersList:
       - id: 1
         host: mpc-node-1
