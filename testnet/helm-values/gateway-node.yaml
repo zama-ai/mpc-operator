@@ -21,7 +21,7 @@ customArgs:
 
 persistence:
   enabled: true
-  size: 1000Gi
+  size: 2000Gi
   storageClassName: gp3
 
 extraEnv:
@@ -73,7 +73,6 @@ configmap:
     node:
       data-availability:
         enable: true
-        sequencer-inbox-address: "0x4f96104A72d7282daDF7B2d3Bff44E5dBa400FF4"
         rest-aggregator:
           enable: true
           urls:
