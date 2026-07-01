@@ -155,4 +155,35 @@ pause_contract() {
   fi
   echo "=================================================="
 }
+
+# Pause the Gateway Config, which has no paused() getter: the transaction is
+# always sent, with no status check. Same anvil/impersonation behaviour as
+# pause_contract.
+pause_gateway_contract() {
+  LABEL="$1"; RPC="$2"; SEND_TARGET="$3"; shift 3
+  echo "== ${LABEL} =="
+  SEND_RPC="${RPC}"; SIGN_ARGS="${WALLET_ARGS}"
+  if [ "${DRY_RUN}" = "true" ]; then
+    anvil --fork-url "${RPC}" --port 8545 --silent &
+    ANVIL_PID=$!
+    SEND_RPC="http://127.0.0.1:8545"
+    until cast block-number --rpc-url "${SEND_RPC}" >/dev/null 2>&1; do sleep 1; done
+    if [ -n "${IMPERSONATE}" ]; then
+      cast rpc anvil_impersonateAccount "${PAUSER_ADDRESS}" --rpc-url "${SEND_RPC}" >/dev/null
+      SIGN_ARGS="--from ${PAUSER_ADDRESS} --unlocked"
+    fi
+  fi
+  echo "pauser balance: $(cast balance "${PAUSER_ADDRESS}" --rpc-url "${SEND_RPC}")"
+  echo "Pausing ${LABEL}"
+  if cast send "${SEND_TARGET}" "$@" ${SIGN_ARGS} --rpc-url "${SEND_RPC}"; then
+    echo "Pause transaction succeeded"
+  else
+    echo "FAILED to pause: ${LABEL}"
+  fi
+  if [ "${DRY_RUN}" = "true" ]; then
+    kill "${ANVIL_PID}" 2>/dev/null || true
+    wait "${ANVIL_PID}" 2>/dev/null || true
+  fi
+  echo "=================================================="
+}
 {{- end }}
