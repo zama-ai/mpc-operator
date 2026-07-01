@@ -21,31 +21,53 @@ wallet:
     name: pauser-wallet
     key: private-key
 
-config:
-  # Method to pause the contracts.
-  pauseMethodIds:
-    gatewayConfigContract: "0x9a5a3bc4"
-    ethereumAclContract: "0x8456cb59"
-    polygonAclContract: "0x8456cb59"
-  devnet:
-    gatewayConfigContractAddress: "0x530749d571beBEc20980425557968cabc6328296"
-    ethereumAclContractAddress: "0xBCA6F8De823a399Dc431930FD5EE550Bf1C0013e"
-    ethereumTokenPauserSetWrapperAddress: ""
-    # Polygon pause is skipped when the ACL address is empty.
-    polygonAclContractAddress: "0x21d5fcabee8260b8aC18A2f0cEe6869AE08cc44b"
-  testnet:
-    gatewayConfigContractAddress: "0x94153006067B89399e059284f5a7Fe016940E332"
-    ethereumAclContractAddress: "0xf0Ffdc93b7E186bC2f8CB3dAA75D86d1930A433D"
-    ethereumTokenAddress: "0xa798B04149e7a61cc95B7D114AD420e8969eA268"
-    ethereumTokenPauserSetWrapperAddress: "0xEd03Be6711787f3068885137723504a075514040"
-    polygonAclContractAddress: "0xD99Cb9Fc3c42c87f2A4A12e8Fd60318d6bDdf985"
-  mainnet:
-    gatewayConfigContractAddress: "0xDE537Be194777A56f8B19d14079E6a78249390ab"
-    ethereumAclContractAddress: "0xcA2E8f1F656CD25C01F05d0b243Ab1ecd4a8ffb6"
-    ethereumTokenAddress: "0xA12CC123ba206d4031D1c7f6223D1C2Ec249f4f3"
-    ethereumTokenPauserSetWrapperAddress: "0x08940bC8944A17E64AA9F5398046ABc75bB26699"
-    # TODO(polygon): fill in once the mainnet Polygon ACL contract is deployed.
-    polygonAclContractAddress: ""
+# Zama token mint pause (Ethereum only). Skipped for any network whose
+# tokenAddress is empty/absent.
+ethereumToken:
+  rpcUrlEnv: ETHEREUM_RPC_URL
+  tokenAddress:
+    devnet: ""
+    testnet: "0xa798B04149e7a61cc95B7D114AD420e8969eA268"
+    mainnet: "0xA12CC123ba206d4031D1c7f6223D1C2Ec249f4f3"
+  tokenPauserSetWrapperAddress:
+    devnet: ""
+    testnet: "0xEd03Be6711787f3068885137723504a075514040"
+    mainnet: "0x08940bC8944A17E64AA9F5398046ABc75bB26699"
+
+# Gateway pause configuration.
+gatewayChain:
+  pauseMethodId: "0x9a5a3bc4"
+  # Name of the env var (declared under `env:`) holding the Gateway RPC URL.
+  rpcUrlEnv: GATEWAY_RPC_URL
+  gatewayConfigContractAddress:
+    devnet: "0x530749d571beBEc20980425557968cabc6328296"
+    testnet: "0x94153006067B89399e059284f5a7Fe016940E332"
+    mainnet: "0xDE537Be194777A56f8B19d14079E6a78249390ab"
+
+# Host-chain protocol (ACL) pause. To onboard a new host chain, append an entry
+# here; no template changes are needed. A chain is skipped for any network whose
+# aclContractAddress is empty/absent.
+hostChains:
+  - name: ethereum
+    displayName: Ethereum
+    # Name of the env var (declared under `env:`) holding this chain's RPC URL.
+    rpcUrlEnv: ETHEREUM_RPC_URL
+    aclPauseMethodId: "0x8456cb59"
+    aclContractAddress:
+      devnet: "0xBCA6F8De823a399Dc431930FD5EE550Bf1C0013e"
+      testnet: "0xf0Ffdc93b7E186bC2f8CB3dAA75D86d1930A433D"
+      mainnet: "0xcA2E8f1F656CD25C01F05d0b243Ab1ecd4a8ffb6"
+  - name: polygon
+    displayName: Polygon
+    rpcUrlEnv: POLYGON_RPC_URL
+    aclPauseMethodId: "0x8456cb59"
+    aclContractAddress:
+      devnet: "0x21d5fcabee8260b8aC18A2f0cEe6869AE08cc44b"
+      testnet: "0xD99Cb9Fc3c42c87f2A4A12e8Fd60318d6bDdf985"
+      # TODO(polygon): fill in once the mainnet Polygon ACL contract is deployed.
+      mainnet: ""
+
+# Dynamic RPC configuration
 env:
   - name: GATEWAY_RPC_URL
     valueFrom:

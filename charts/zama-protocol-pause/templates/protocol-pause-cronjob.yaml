@@ -79,50 +79,48 @@ spec:
                   {{- else }}
                   PAUSER_ADDRESS=$(cast wallet address --private-key ${WALLET_PRIVATE_KEY})
                   {{- end }}
+                  {{- $net := .Values.network }}
+                  {{- $zero := "0x0000000000000000000000000000000000000000000000000000000000000000" }}
                   echo "Pauser wallet address:${PAUSER_ADDRESS}"
                   echo "=================================================="
-                  echo "Get wallet balance on Ethereum (Host) {{ .Values.network | title }}:"
-                  cast balance ${PAUSER_ADDRESS} --rpc-url ${ETHEREUM_RPC_URL}
-                  echo "Get wallet balance on Gateway  {{ .Values.network | title }}:"
-                  cast balance ${PAUSER_ADDRESS} --rpc-url ${GATEWAY_RPC_URL}
-                  {{- if (index .Values.config .Values.network).polygonAclContractAddress }}
-                  echo "Get wallet balance on Polygon (Host) {{ .Values.network | title }}:"
-                  cast balance ${PAUSER_ADDRESS} --rpc-url ${POLYGON_RPC_URL}
+                  {{- range .Values.hostChains }}
+                  {{- if index .aclContractAddress $net }}
+                  echo "Get wallet balance on {{ .displayName }} (Host) {{ $net | title }}:"
+                  cast balance ${PAUSER_ADDRESS} --rpc-url {{ printf "${%s}" .rpcUrlEnv }}
                   {{- end }}
-                  echo "=================================================="
-                  echo "Get Ethereum (Host) {{ .Values.network | title }} paused status:"
-                  ETH_CONTRACTS_PAUSED_STATUS=$(cast call ${ETHEREUM_ACL_CONTRACT_ADDRESS} "paused()" --rpc-url ${ETHEREUM_RPC_URL})
-                  if [ "${ETH_CONTRACTS_PAUSED_STATUS}" = "0x0000000000000000000000000000000000000000000000000000000000000000" ]; then
-                    echo "${ETH_CONTRACTS_PAUSED_STATUS} (Ethereum Contracts are *not* paused)"
-                  else
-                    echo "${ETH_CONTRACTS_PAUSED_STATUS} (Ethereum Contracts are already paused)"
-                  fi
-                  {{- if (index .Values.config .Values.network).polygonAclContractAddress }}
-                  echo "=================================================="
-                  echo "Get Polygon (Host) {{ .Values.network | title }} paused status:"
-                  POLYGON_CONTRACTS_PAUSED_STATUS=$(cast call ${POLYGON_ACL_CONTRACT_ADDRESS} "paused()" --rpc-url ${POLYGON_RPC_URL})
-                  if [ "${POLYGON_CONTRACTS_PAUSED_STATUS}" = "0x0000000000000000000000000000000000000000000000000000000000000000" ]; then
-                    echo "${POLYGON_CONTRACTS_PAUSED_STATUS} (Polygon Contracts are *not* paused)"
-                  else
-                    echo "${POLYGON_CONTRACTS_PAUSED_STATUS} (Polygon Contracts are already paused)"
-                  fi
                   {{- end }}
+                  echo "Get wallet balance on Gateway {{ $net | title }}:"
+                  cast balance ${PAUSER_ADDRESS} --rpc-url {{ printf "${%s}" .Values.gatewayChain.rpcUrlEnv }}
                   echo "=================================================="
+                  {{- range .Values.hostChains }}
+                  {{- $addr := index .aclContractAddress $net }}
+                  {{- if $addr }}
+                  {{- $var := printf "%s_PAUSED_STATUS" (.name | upper | replace "-" "_") }}
+                  echo "Get {{ .displayName }} (Host) {{ $net | title }} paused status:"
+                  {{ $var }}=$(cast call {{ $addr }} "paused()" --rpc-url {{ printf "${%s}" .rpcUrlEnv }})
+                  if [ "{{ printf "${%s}" $var }}" = "{{ $zero }}" ]; then
+                    echo "{{ printf "${%s}" $var }} ({{ .displayName }} Contracts are *not* paused)"
+                  else
+                    echo "{{ printf "${%s}" $var }} ({{ .displayName }} Contracts are already paused)"
+                  fi
+                  echo "=================================================="
+                  {{- end }}
+                  {{- end }}
                   {{- if .Values.dryRun }}
                   echo "Running in dry-run mode, no transactions will be sent."
                   {{- else }}
-                  if [ "${ETH_CONTRACTS_PAUSED_STATUS}" = "0x0000000000000000000000000000000000000000000000000000000000000000" ]; then
-                    echo "Pause Zama Protocol on Ethereum (Host) {{ .Values.network | title }}"
-                    cast send {{ if .Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} ${ETHEREUM_ACL_CONTRACT_ADDRESS} ${ETHEREUM_ACL_CONTRACT_PAUSE_METHOD_ID} --rpc-url ${ETHEREUM_RPC_URL}
-                  fi
-                  {{- if (index .Values.config .Values.network).polygonAclContractAddress }}
-                  if [ "${POLYGON_CONTRACTS_PAUSED_STATUS}" = "0x0000000000000000000000000000000000000000000000000000000000000000" ]; then
-                    echo "Pause Zama Protocol on Polygon (Host) {{ .Values.network | title }}"
-                    cast send {{ if .Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} ${POLYGON_ACL_CONTRACT_ADDRESS} ${POLYGON_ACL_CONTRACT_PAUSE_METHOD_ID} --rpc-url ${POLYGON_RPC_URL}
+                  {{- range .Values.hostChains }}
+                  {{- $addr := index .aclContractAddress $net }}
+                  {{- if $addr }}
+                  {{- $var := printf "%s_PAUSED_STATUS" (.name | upper | replace "-" "_") }}
+                  if [ "{{ printf "${%s}" $var }}" = "{{ $zero }}" ]; then
+                    echo "Pause Zama Protocol on {{ .displayName }} (Host) {{ $net | title }}"
+                    cast send {{ if $.Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} {{ $addr }} {{ .aclPauseMethodId }} --rpc-url {{ printf "${%s}" .rpcUrlEnv }}
                   fi
                   {{- end }}
-                  echo "Pause Zama Protocol on Gateway {{ .Values.network | title }}"
-                  cast send {{ if .Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} ${GATEWAY_CONFIG_CONTRACT_ADDRESS} ${GATEWAY_CONFIG_CONTRACT_PAUSE_METHOD_ID} --rpc-url ${GATEWAY_RPC_URL}
+                  {{- end }}
+                  echo "Pause Zama Protocol on Gateway {{ $net | title }}"
+                  cast send {{ if .Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} {{ index .Values.gatewayChain.gatewayConfigContractAddress $net }} {{ .Values.gatewayChain.pauseMethodId }} --rpc-url {{ printf "${%s}" .Values.gatewayChain.rpcUrlEnv }}
                   {{- end }}
               env:
                 {{- if .Values.wallet.awsKMS.enabled }}
@@ -137,24 +135,6 @@ spec:
                     secretKeyRef:
                       name: {{ .Values.wallet.secret.name }}
                       key: {{ .Values.wallet.secret.key }}
-                {{- end }}
-                {{- with index .Values.config .Values.network }}
-                - name: ETHEREUM_ACL_CONTRACT_ADDRESS
-                  value: {{ .ethereumAclContractAddress | quote }}
-                - name: GATEWAY_CONFIG_CONTRACT_ADDRESS
-                  value: {{ .gatewayConfigContractAddress | quote}}
-                {{- with .polygonAclContractAddress }}
-                - name: POLYGON_ACL_CONTRACT_ADDRESS
-                  value: {{ . | quote }}
-                {{- end }}
-                {{- end }}
-                - name: ETHEREUM_ACL_CONTRACT_PAUSE_METHOD_ID
-                  value: {{ .Values.config.pauseMethodIds.ethereumAclContract | quote }}
-                - name: GATEWAY_CONFIG_CONTRACT_PAUSE_METHOD_ID
-                  value: {{ .Values.config.pauseMethodIds.gatewayConfigContract | quote }}
-                {{- if (index .Values.config .Values.network).polygonAclContractAddress }}
-                - name: POLYGON_ACL_CONTRACT_PAUSE_METHOD_ID
-                  value: {{ .Values.config.pauseMethodIds.polygonAclContract | quote }}
                 {{- end }}
               {{- with .Values.env }}
                 {{- toYaml . | nindent 16 }}

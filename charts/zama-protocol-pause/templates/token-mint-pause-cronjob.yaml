@@ -79,16 +79,19 @@ spec:
                   {{- else }}
                   PAUSER_ADDRESS=$(cast wallet address --private-key ${WALLET_PRIVATE_KEY})
                   {{- end }}
+                  {{- $net := .Values.network }}
+                  {{- $zero := "0x0000000000000000000000000000000000000000000000000000000000000000" }}
+                  {{- $token := index .Values.ethereumToken.tokenAddress $net }}
+                  {{- $wrapper := index .Values.ethereumToken.tokenPauserSetWrapperAddress $net }}
+                  {{- $rpc := printf "${%s}" .Values.ethereumToken.rpcUrlEnv }}
                   echo "Pauser wallet address:${PAUSER_ADDRESS}"
                   echo "=================================================="
-                  echo "Get wallet balance on Ethereum (Host) {{ .Values.network | title }}:"
-                  cast balance ${PAUSER_ADDRESS} --rpc-url ${ETHEREUM_RPC_URL}
-                  echo "Get wallet balance on Gateway  {{ .Values.network | title }}:"
-                  cast balance ${PAUSER_ADDRESS} --rpc-url ${GATEWAY_RPC_URL}
-                  echo "=================================================="
-                  echo "Get Zama Token Mint ({{ .Values.network | title }}) paused status:"
-                  ETH_TOKEN_MINT_PAUSED_STATUS=$(cast call ${ETHEREUM_TOKEN_ADDRESS} "paused()" --rpc-url ${ETHEREUM_RPC_URL})
-                  if [ "${ETH_TOKEN_MINT_PAUSED_STATUS}" = "0x0000000000000000000000000000000000000000000000000000000000000000" ]; then
+                  {{- if $token }}
+                  echo "Get wallet balance on Ethereum (Host) {{ $net | title }}:"
+                  cast balance ${PAUSER_ADDRESS} --rpc-url {{ $rpc }}
+                  echo "Get Zama Token Mint ({{ $net | title }}) paused status:"
+                  ETH_TOKEN_MINT_PAUSED_STATUS=$(cast call {{ $token }} "paused()" --rpc-url {{ $rpc }})
+                  if [ "${ETH_TOKEN_MINT_PAUSED_STATUS}" = "{{ $zero }}" ]; then
                     echo "${ETH_TOKEN_MINT_PAUSED_STATUS} (Zama Token Mint is *not* paused)"
                   else
                     echo "${ETH_TOKEN_MINT_PAUSED_STATUS} (Zama Token Mint already paused)"
@@ -96,10 +99,13 @@ spec:
                   {{- if .Values.dryRun }}
                   echo "Running in dry-run mode, no transactions will be sent."
                   {{- else }}
-                  if [ "${ETH_TOKEN_MINT_PAUSED_STATUS}" = "0x0000000000000000000000000000000000000000000000000000000000000000" ]; then
-                    echo "Pause Zama Token Mint on {{ .Values.network | title }}"
-                    cast send {{ if .Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} ${ETHEREUM_TOKEN_PAUSER_SET_WRAPPER_ADDRESS} "callFunction(bytes)" 0x --rpc-url ${ETHEREUM_RPC_URL}
+                  if [ "${ETH_TOKEN_MINT_PAUSED_STATUS}" = "{{ $zero }}" ]; then
+                    echo "Pause Zama Token Mint on {{ $net | title }}"
+                    cast send {{ if .Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} {{ $wrapper }} "callFunction(bytes)" 0x --rpc-url {{ $rpc }}
                   fi
+                  {{- end }}
+                  {{- else }}
+                  echo "No Ethereum token configured for {{ $net | title }}; nothing to pause."
                   {{- end }}
               env:
                 {{- if .Values.wallet.awsKMS.enabled }}
@@ -114,12 +120,6 @@ spec:
                     secretKeyRef:
                       name: {{ .Values.wallet.secret.name }}
                       key: {{ .Values.wallet.secret.key }}
-                {{- end }}
-                {{- with index .Values.config .Values.network }}
-                - name: ETHEREUM_TOKEN_ADDRESS
-                  value: {{ .ethereumTokenAddress | quote }}
-                - name: ETHEREUM_TOKEN_PAUSER_SET_WRAPPER_ADDRESS
-                  value: {{ .ethereumTokenPauserSetWrapperAddress | quote }}
                 {{- end }}
               {{- with .Values.env }}
                 {{- toYaml . | nindent 16 }}

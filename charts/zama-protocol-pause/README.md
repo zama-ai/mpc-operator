@@ -1,13 +1,33 @@
 # zama-protocol-pause
 
-A Helm chart for deploying a Kubernetes CronJob to pause the Zama Protocol on both Ethereum and Gateway networks in emergency situations.
+A Helm chart for deploying Kubernetes CronJobs to pause the Zama Protocol on its host chains and Gateway networks in emergency situations.
 
 ## Overview
 
-This chart deploys a CronJob that can execute pause transactions on:
-- Ethereum ACL Contract (on Ethereum Mainnet/Testnet)
-- Polygon ACL Contract (when `polygonAclContractAddress` is set for the network)
+This chart deploys CronJobs that can execute pause transactions on:
+- Host-chain ACL Contracts, one per entry in `hostChains` (e.g. Ethereum, Polygon)
 - Gateway Config Contract (on Zama Gateway Mainnet/Testnet/Devnet)
+- Zama Token mint on Ethereum (configured under `ethereumToken`)
+
+### Adding a host chain
+
+Host chains are data-driven: append an entry to `hostChains` in `values.yaml`. No template changes are needed.
+
+```yaml
+hostChains:
+  - name: arbitrum
+    displayName: Arbitrum
+    rpcUrlEnv: ARBITRUM_RPC_URL      # env var declared under `env:` below
+    aclPauseMethodId: "0x8456cb59"   # pause() selector
+    aclContractAddress:
+      devnet: "0x..."
+      testnet: "0x..."
+      mainnet: "0x..."               # empty/absent => pause skipped for that network
+```
+
+Then add the matching `ARBITRUM_RPC_URL` entry to the `env:` list.
+
+Zama token mint pause is Ethereum-only and configured separately under `ethereumToken` (`tokenAddress` / `tokenPauserSetWrapperAddress` per network).
 
 The CronJob is configured to be suspended by default and uses an invalid schedule (`0 0 31 2 *`) to prevent automatic execution.
 It is designed to be manually triggered only in emergency situations.
