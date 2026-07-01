@@ -123,7 +123,7 @@ fmt_paused() {
 # otherwise the wallet signs (against the fork in dry-run, or the real RPC).
 pause_contract() {
   LABEL="$1"; RPC="$2"; STATUS_CONTRACT="$3"; SEND_TARGET="$4"; shift 4
-  echo "== ${LABEL} =="
+  if [ "${DRY_RUN}" = "true" ]; then echo "== ${LABEL} | Anvil Fork =="; else echo "== ${LABEL} =="; fi
   SEND_RPC="${RPC}"; SIGN_ARGS="${WALLET_ARGS}"
   if [ "${DRY_RUN}" = "true" ]; then
     anvil --fork-url "${RPC}" --port 8545 --silent &
@@ -161,7 +161,7 @@ pause_contract() {
 # pause_contract.
 pause_gateway_contract() {
   LABEL="$1"; RPC="$2"; SEND_TARGET="$3"; shift 3
-  echo "== ${LABEL} =="
+  if [ "${DRY_RUN}" = "true" ]; then echo "== ${LABEL} | Anvil Fork =="; else echo "== ${LABEL} =="; fi
   SEND_RPC="${RPC}"; SIGN_ARGS="${WALLET_ARGS}"
   if [ "${DRY_RUN}" = "true" ]; then
     anvil --fork-url "${RPC}" --port 8545 --silent &
