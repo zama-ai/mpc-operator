@@ -6,6 +6,7 @@ A Helm chart for deploying a Kubernetes CronJob to pause the Zama Protocol on bo
 
 This chart deploys a CronJob that can execute pause transactions on:
 - Ethereum ACL Contract (on Ethereum Mainnet/Testnet)
+- Polygon ACL Contract (when `polygonAclContractAddress` is set for the network)
 - Gateway Config Contract (on Zama Gateway Mainnet/Testnet/Devnet)
 
 The CronJob is configured to be suspended by default and uses an invalid schedule (`0 0 31 2 *`) to prevent automatic execution.
@@ -89,6 +90,12 @@ env:
       secretKeyRef:
         name: rpcs
         key: ethereum-rpc-url
+  # Only needed on networks that also pause Polygon.
+  - name: POLYGON_RPC_URL
+    valueFrom:
+      secretKeyRef:
+        name: rpcs
+        key: polygon-rpc-url
 ```
 
 **Note**: It is highly recommended to use authenticated RPC endpoints instead of public ones for reliability.
