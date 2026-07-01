@@ -2,8 +2,18 @@ nameOverride: ""
 fullnameOverride: "zama-protocol-pause"
 
 # devnet/testnet/mainnet
-network: "mainnet"
+network: ""
+
+# When true, no real transactions are sent. Instead each chain is forked
+# locally with `anvil` and the pause is simulated by impersonating the pauser
+# account against the fork. By default the pauser address is derived from the
+# configured wallet (KMS or private key), so the same wallet used in production
+# is exercised.
 dryRun: true
+
+# Optional. When set (non-empty), dry-run mode impersonates this address instead
+# of deriving it from the wallet. Useful to test without any wallet / KMS access.
+dryRunPauserAddressOverride: ""
 
 serviceAccount:
   create: false
@@ -110,12 +120,12 @@ env:
 #   value: "https://polygon.drpc.org"
 
 image:
-  repository: ghcr.io/foundry-rs/foundry
-  tag: stable
+  repository: hub.zama.org/zama-protocol/zama-ai/security-hub/infra/eth-foundry
+  tag: 0.3.1
   pullPolicy: ""
 
 imagePullSecrets:
-#  - name: registry-credentials
+  - name: registry-credentials
 
 zamaProtocolPause:
   enabled: true

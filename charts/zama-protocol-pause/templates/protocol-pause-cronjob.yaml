@@ -1,4 +1,7 @@
 {{- if .Values.zamaProtocolPause.enabled }}
+{{- include "zama-protocol-pause.validateNetwork" . }}
+{{- /* No wallet is loaded in dry-run when a pauser address is set: it is impersonated on the fork. */}}
+{{- $loadWallet := not (and .Values.dryRun .Values.dryRunPauserAddressOverride) }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -50,7 +53,7 @@ spec:
             {{- toYaml . | nindent 12 }}
             {{- end }}
         spec:
-          {{- if or .Values.wallet.awsKMS.enabled .Values.serviceAccount.create }}
+          {{- if or (and .Values.wallet.awsKMS.enabled $loadWallet) .Values.serviceAccount.create }}
           serviceAccountName: {{ include "zama-protocol-pause.serviceAccountName" . }}
           {{- end }}
           {{- with .Values.imagePullSecrets }}
@@ -74,55 +77,18 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  {{- if .Values.wallet.awsKMS.enabled }}
-                  PAUSER_ADDRESS=$(cast wallet address --aws ${WALLET_PRIVATE_KEY})
-                  {{- else }}
-                  PAUSER_ADDRESS=$(cast wallet address --private-key ${WALLET_PRIVATE_KEY})
-                  {{- end }}
+                  {{- include "zama-protocol-pause.pauseScript" . | nindent 18 }}
                   {{- $net := .Values.network }}
-                  {{- $zero := "0x0000000000000000000000000000000000000000000000000000000000000000" }}
-                  echo "Pauser wallet address:${PAUSER_ADDRESS}"
-                  echo "=================================================="
-                  {{- range .Values.hostChains }}
-                  {{- if index .aclContractAddress $net }}
-                  echo "Get wallet balance on {{ .displayName }} (Host) {{ $net | title }}:"
-                  cast balance ${PAUSER_ADDRESS} --rpc-url {{ printf "${%s}" .rpcUrlEnv }}
-                  {{- end }}
-                  {{- end }}
-                  echo "Get wallet balance on Gateway {{ $net | title }}:"
-                  cast balance ${PAUSER_ADDRESS} --rpc-url {{ printf "${%s}" .Values.gatewayChain.rpcUrlEnv }}
-                  echo "=================================================="
                   {{- range .Values.hostChains }}
                   {{- $addr := index .aclContractAddress $net }}
                   {{- if $addr }}
-                  {{- $var := printf "%s_PAUSED_STATUS" (.name | upper | replace "-" "_") }}
-                  echo "Get {{ .displayName }} (Host) {{ $net | title }} paused status:"
-                  {{ $var }}=$(cast call {{ $addr }} "paused()" --rpc-url {{ printf "${%s}" .rpcUrlEnv }})
-                  if [ "{{ printf "${%s}" $var }}" = "{{ $zero }}" ]; then
-                    echo "{{ printf "${%s}" $var }} ({{ .displayName }} Contracts are *not* paused)"
-                  else
-                    echo "{{ printf "${%s}" $var }} ({{ .displayName }} Contracts are already paused)"
-                  fi
-                  echo "=================================================="
+                  pause_contract "{{ .displayName }} (Host) {{ $net | title }}" "{{ printf "${%s}" .rpcUrlEnv }}" "{{ $addr }}" "{{ $addr }}" {{ .aclPauseMethodId }}
                   {{- end }}
                   {{- end }}
-                  {{- if .Values.dryRun }}
-                  echo "Running in dry-run mode, no transactions will be sent."
-                  {{- else }}
-                  {{- range .Values.hostChains }}
-                  {{- $addr := index .aclContractAddress $net }}
-                  {{- if $addr }}
-                  {{- $var := printf "%s_PAUSED_STATUS" (.name | upper | replace "-" "_") }}
-                  if [ "{{ printf "${%s}" $var }}" = "{{ $zero }}" ]; then
-                    echo "Pause Zama Protocol on {{ .displayName }} (Host) {{ $net | title }}"
-                    cast send {{ if $.Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} {{ $addr }} {{ .aclPauseMethodId }} --rpc-url {{ printf "${%s}" .rpcUrlEnv }}
-                  fi
-                  {{- end }}
-                  {{- end }}
-                  echo "Pause Zama Protocol on Gateway {{ $net | title }}"
-                  cast send {{ if .Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} {{ index .Values.gatewayChain.gatewayConfigContractAddress $net }} {{ .Values.gatewayChain.pauseMethodId }} --rpc-url {{ printf "${%s}" .Values.gatewayChain.rpcUrlEnv }}
-                  {{- end }}
+                  {{- $gw := index .Values.gatewayChain.gatewayConfigContractAddress $net }}
+                  pause_contract "Gateway {{ $net | title }}" "{{ printf "${%s}" .Values.gatewayChain.rpcUrlEnv }}" "{{ $gw }}" "{{ $gw }}" {{ .Values.gatewayChain.pauseMethodId }}
               env:
+                {{- if $loadWallet }}
                 {{- if .Values.wallet.awsKMS.enabled }}
                 - name: AWS_KMS_KEY_ID
                   valueFrom:
@@ -135,6 +101,7 @@ spec:
                     secretKeyRef:
                       name: {{ .Values.wallet.secret.name }}
                       key: {{ .Values.wallet.secret.key }}
+                {{- end }}
                 {{- end }}
               {{- with .Values.env }}
                 {{- toYaml . | nindent 16 }}

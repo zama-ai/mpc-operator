@@ -1,4 +1,7 @@
 {{- if .Values.zamaTokenPause.enabled }}
+{{- include "zama-protocol-pause.validateNetwork" . }}
+{{- /* No wallet is loaded in dry-run when a pauser address is set: it is impersonated on the fork. */}}
+{{- $loadWallet := not (and .Values.dryRun .Values.dryRunPauserAddressOverride) }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -50,7 +53,7 @@ spec:
             {{- toYaml . | nindent 12 }}
             {{- end }}
         spec:
-          {{- if or .Values.wallet.awsKMS.enabled .Values.serviceAccount.create }}
+          {{- if or (and .Values.wallet.awsKMS.enabled $loadWallet) .Values.serviceAccount.create }}
           serviceAccountName: {{ include "zama-protocol-pause.serviceAccountName" . }}
           {{- end }}
           {{- with .Values.imagePullSecrets }}
@@ -74,40 +77,17 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  {{- if .Values.wallet.awsKMS.enabled }}
-                  PAUSER_ADDRESS=$(cast wallet address --aws ${WALLET_PRIVATE_KEY})
-                  {{- else }}
-                  PAUSER_ADDRESS=$(cast wallet address --private-key ${WALLET_PRIVATE_KEY})
-                  {{- end }}
                   {{- $net := .Values.network }}
-                  {{- $zero := "0x0000000000000000000000000000000000000000000000000000000000000000" }}
                   {{- $token := index .Values.ethereumToken.tokenAddress $net }}
                   {{- $wrapper := index .Values.ethereumToken.tokenPauserSetWrapperAddress $net }}
-                  {{- $rpc := printf "${%s}" .Values.ethereumToken.rpcUrlEnv }}
-                  echo "Pauser wallet address:${PAUSER_ADDRESS}"
-                  echo "=================================================="
                   {{- if $token }}
-                  echo "Get wallet balance on Ethereum (Host) {{ $net | title }}:"
-                  cast balance ${PAUSER_ADDRESS} --rpc-url {{ $rpc }}
-                  echo "Get Zama Token Mint ({{ $net | title }}) paused status:"
-                  ETH_TOKEN_MINT_PAUSED_STATUS=$(cast call {{ $token }} "paused()" --rpc-url {{ $rpc }})
-                  if [ "${ETH_TOKEN_MINT_PAUSED_STATUS}" = "{{ $zero }}" ]; then
-                    echo "${ETH_TOKEN_MINT_PAUSED_STATUS} (Zama Token Mint is *not* paused)"
-                  else
-                    echo "${ETH_TOKEN_MINT_PAUSED_STATUS} (Zama Token Mint already paused)"
-                  fi
-                  {{- if .Values.dryRun }}
-                  echo "Running in dry-run mode, no transactions will be sent."
-                  {{- else }}
-                  if [ "${ETH_TOKEN_MINT_PAUSED_STATUS}" = "{{ $zero }}" ]; then
-                    echo "Pause Zama Token Mint on {{ $net | title }}"
-                    cast send {{ if .Values.wallet.awsKMS.enabled }}--aws{{ else }}--private-key ${WALLET_PRIVATE_KEY}{{ end }} {{ $wrapper }} "callFunction(bytes)" 0x --rpc-url {{ $rpc }}
-                  fi
-                  {{- end }}
+                  {{- include "zama-protocol-pause.pauseScript" . | nindent 18 }}
+                  pause_contract "Zama Token Mint {{ $net | title }}" "{{ printf "${%s}" .Values.ethereumToken.rpcUrlEnv }}" "{{ $token }}" "{{ $wrapper }}" "callFunction(bytes)" 0x
                   {{- else }}
                   echo "No Ethereum token configured for {{ $net | title }}; nothing to pause."
                   {{- end }}
               env:
+                {{- if $loadWallet }}
                 {{- if .Values.wallet.awsKMS.enabled }}
                 - name: AWS_KMS_KEY_ID
                   valueFrom:
@@ -120,6 +100,7 @@ spec:
                     secretKeyRef:
                       name: {{ .Values.wallet.secret.name }}
                       key: {{ .Values.wallet.secret.key }}
+                {{- end }}
                 {{- end }}
               {{- with .Values.env }}
                 {{- toYaml . | nindent 16 }}
