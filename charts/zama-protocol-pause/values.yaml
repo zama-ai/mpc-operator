@@ -13,7 +13,7 @@ dryRun: true
 
 # Optional. When set (non-empty), dry-run mode impersonates this address instead
 # of deriving it from the wallet. Useful to test without any wallet / KMS access.
-dryRunPauserAddressOverride: ""
+dryRunPauserImpersonationAddress: ""
 
 serviceAccount:
   create: false

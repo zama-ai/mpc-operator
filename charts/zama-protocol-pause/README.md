@@ -50,23 +50,32 @@ kubectl create job --from=cronjob/zama-protocol-pause zama-pause-$(date +%s) -n 
 ### Dry Run
 
 In dry-run mode (`--set dryRun=true`, the default) no real transactions are sent.
-Instead each chain is forked locally with `anvil` and the pause is simulated by
-impersonating the pauser account and sending the pause transaction against the
-fork. This validates that the pauser is authorized, funded, and that the call
-succeeds, without touching the real chain.
+Instead each chain is forked locally with `anvil` and the pause is simulated
+against the fork. This validates that the pauser is authorized, funded, and that
+the call succeeds, without touching the real chain.
 
-By default the impersonated address is derived from the configured wallet (KMS or
-private key), so the same wallet used in production is exercised. Set
-`dryRunPauserAddressOverride` to impersonate a specific address instead, which lets you
-run a dry-run without any wallet / KMS access.
+By default the configured wallet (KMS or private key) signs the pause against
+the fork, so the same wallet used in production is exercised. Set
+`dryRunPauserImpersonationAddress` to instead impersonate a specific address
+(via `anvil_impersonateAccount`), which lets you run a dry-run without any wallet
+/ KMS access.
 Then trigger the job manually.
 
-Example dry run with Zama's Testnet pauser address
+Run a dry run with the operator's pauser address (from AWS-KMS config in cluster):
 ```
-helm upgrade --install pause-dry-run . -n zama-protocol --set fullnameOverride=zama-protocol-pause-dry-run --set dryRun=true --set network=testnet --set dryRunPauserAddressOverride=0xb7D919BDC506E23BE2f34E9dBa25B2Af4C5141f0                                                                                                                                                                                                   
-kubectl create job --from=cronjob/zama-protocol-pause-dry-run-contracts zama-pause-dryrun-$(date +%s) -n zama-protocol
-kubectl create job --from=cronjob/zama-protocol-pause-dry-run-token-mint zama-token-dryrun-$(date +%s) -n zama-protocol                                                                                                   
-kubectl logs -f -l app.kubernetes.io/name=zama-protocol-pause-dry-run -n zama-protocol    
+helm upgrade --install pause-dry-run . -n zama-protocol --set fullnameOverride=pause-dry-run --set dryRun=true --set network=testnet                                                                                                                                                                                               
+```
+
+Run a dry run with Zama's impersonated Testnet pauser address:
+```
+helm upgrade --install pause-dry-run . -n zama-protocol --set fullnameOverride=pause-dry-run --set dryRun=true --set network=testnet --set dryRunPauserImpersonationAddress=0xb7D919BDC506E23BE2f34E9dBa25B2Af4C5141f0                                                                                                                                                                                                   
+```
+
+To start a dry-run pause job:
+```
+kubectl create job --from=cronjob/pause-dry-run-contracts zama-pause-dryrun-$(date +%s) -n zama-protocol
+kubectl create job --from=cronjob/pause-dry-run-token-mint zama-token-dryrun-$(date +%s) -n zama-protocol                                                                                                   
+kubectl logs -f -l app.kubernetes.io/name=pause-dry-run -n zama-protocol    
 ```
 
 ## Configuration

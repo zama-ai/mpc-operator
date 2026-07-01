@@ -93,8 +93,9 @@ Args passed to pause_contract: LABEL RPC STATUS_CONTRACT SEND_TARGET [calldata..
 {{- $zero := "0x0000000000000000000000000000000000000000000000000000000000000000" -}}
 DRY_RUN="{{ .Values.dryRun }}"
 ZERO="{{ $zero }}"
-{{- if and .Values.dryRun .Values.dryRunPauserAddressOverride }}
-PAUSER_ADDRESS="{{ .Values.dryRunPauserAddressOverride }}"
+{{- if and .Values.dryRun .Values.dryRunPauserImpersonationAddress }}
+IMPERSONATE="true"
+PAUSER_ADDRESS="{{ .Values.dryRunPauserImpersonationAddress }}"
 {{- else if .Values.wallet.awsKMS.enabled }}
 PAUSER_ADDRESS=$(cast wallet address --aws ${WALLET_PRIVATE_KEY})
 WALLET_ARGS="--aws"
@@ -104,7 +105,11 @@ WALLET_ARGS="--private-key ${WALLET_PRIVATE_KEY}"
 {{- end }}
 echo "Pauser address: ${PAUSER_ADDRESS}"
 {{- if .Values.dryRun }}
+{{- if .Values.dryRunPauserImpersonationAddress }}
 echo "DRY-RUN mode: each chain is forked locally with anvil; the pauser is impersonated."
+{{- else }}
+echo "DRY-RUN mode: each chain is forked locally with anvil; the configured wallet signs against the fork."
+{{- end }}
 {{- end }}
 echo "=================================================="
 
@@ -114,8 +119,8 @@ fmt_paused() {
 }
 
 # Check and, if not already paused, pause a contract. In dry-run the RPC is
-# forked locally with anvil and the pauser is impersonated; otherwise the wallet
-# signs against the real RPC.
+# forked locally with anvil; the pauser is impersonated when IMPERSONATE is set,
+# otherwise the wallet signs (against the fork in dry-run, or the real RPC).
 pause_contract() {
   LABEL="$1"; RPC="$2"; STATUS_CONTRACT="$3"; SEND_TARGET="$4"; shift 4
   echo "== ${LABEL} =="
@@ -125,8 +130,10 @@ pause_contract() {
     ANVIL_PID=$!
     SEND_RPC="http://127.0.0.1:8545"
     until cast block-number --rpc-url "${SEND_RPC}" >/dev/null 2>&1; do sleep 1; done
-    cast rpc anvil_impersonateAccount "${PAUSER_ADDRESS}" --rpc-url "${SEND_RPC}" >/dev/null
-    SIGN_ARGS="--from ${PAUSER_ADDRESS} --unlocked"
+    if [ -n "${IMPERSONATE}" ]; then
+      cast rpc anvil_impersonateAccount "${PAUSER_ADDRESS}" --rpc-url "${SEND_RPC}" >/dev/null
+      SIGN_ARGS="--from ${PAUSER_ADDRESS} --unlocked"
+    fi
   fi
   echo "pauser balance: $(cast balance "${PAUSER_ADDRESS}" --rpc-url "${SEND_RPC}")"
   STATUS=$(cast call "${STATUS_CONTRACT}" "paused()" --rpc-url "${SEND_RPC}")

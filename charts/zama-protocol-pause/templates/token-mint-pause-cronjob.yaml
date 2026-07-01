@@ -1,7 +1,7 @@
 {{- if .Values.zamaTokenPause.enabled }}
 {{- include "zama-protocol-pause.validateNetwork" . }}
 {{- /* No wallet is loaded in dry-run when a pauser address is set: it is impersonated on the fork. */}}
-{{- $loadWallet := not (and .Values.dryRun .Values.dryRunPauserAddressOverride) }}
+{{- $loadWallet := not (and .Values.dryRun .Values.dryRunPauserImpersonationAddress) }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
