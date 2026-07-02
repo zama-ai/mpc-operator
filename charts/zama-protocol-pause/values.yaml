@@ -121,7 +121,7 @@ env:
 
 image:
   repository: hub.zama.org/zama-protocol/zama-ai/security-hub/infra/eth-foundry
-  tag: 0.3.1
+  tag: v0.4.0
   pullPolicy: ""
 
 imagePullSecrets:
