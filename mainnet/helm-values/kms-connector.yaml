@@ -3,7 +3,7 @@ commonConfig:
   # Cannot be used for tx-sender until full node supports eth_sendRawTransactionSync
   # gatewayUrl: "http://gateway-node:8547"
   gatewayUrl: "$(CONDUIT_RPC_HTTP_URL)"
-  chainId: "261131"
+  gatewayChainId: "261131"
   gatewayContractAddresses:
     decryption: "0x0f6024a97684f7d90ddb0fAAD79cB15F2C888D24"
     gatewayConfig: "0xDE537Be194777A56f8B19d14079E6a78249390ab"
@@ -16,11 +16,11 @@ commonConfig:
   ethereumContractAddresses:
     kmsVerifier: "$(KMS_VERIFIER_CONTRACT_ADDRESS)"
   env:
-    - name: ETHEREUM_RPC_URL
+    - name: CONDUIT_RPC_HTTP_URL
       valueFrom:
         secretKeyRef:
-          name: rpc
-          key: ethereum-rpc-url
+          name: conduit
+          key: conduit-rpc-http-url
     - name: DATABASE_ENDPOINT
       valueFrom:
         secretKeyRef:
@@ -36,15 +36,15 @@ commonConfig:
         secretKeyRef:
           name: connector-database
           key: password
-    - name: CONDUIT_RPC_HTTP_URL
+    - name: ETHEREUM_RPC_URL # Integrate Node RPC endpoint
       valueFrom:
         secretKeyRef:
-          name: conduit
-          key: conduit-rpc-http-url
-    - name: ACL_CONTRACT_ADDRESS
-      value: '0xcA2E8f1F656CD25C01F05d0b243Ab1ecd4a8ffb6'
-    - name: KMS_VERIFIER_CONTRACT_ADDRESS
-      value: '0x77627828a55156b04Ac0DC0eb30467f1a552BB03'
+          name: rpc
+          key: ethereum-rpc-url
+    - name: ACL_CONTRACT_ADDRESS # Integrate ACL contract
+      value: "0xcA2E8f1F656CD25C01F05d0b243Ab1ecd4a8ffb6"
+    - name: KMS_VERIFIER_CONTRACT_ADDRESS # Integrate KMSVerifier contract
+      value: "0x77627828a55156b04Ac0DC0eb30467f1a552BB03"
 
 kmsConnectorDbMigration:
   enabled: true
@@ -74,9 +74,10 @@ kmsConnectorGwListener:
     name: hub.zama.org/zama-protocol/zama-ai/fhevm/kms-connector/gw-listener
     tag: v0.12.0
   replicas: 1
-  config:
-    # Use full node
-    gatewayUrl: "http://gateway-node:8547"
+  tracing:
+    enabled: false
+  serviceMonitor:
+    enabled: true
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -100,11 +101,13 @@ kmsConnectorKmsWorker:
     tag: v0.12.0
   replicas: 1
   config:
+    kmsCoreEndpoints: "http://kms-core:50100"
     hostChains:
       - url: "$(ETHEREUM_RPC_URL)"
         chainId: 1
-        aclAddress: "0xcA2E8f1F656CD25C01F05d0b243Ab1ecd4a8ffb6"
-    kmsCoreEndpoints: "http://kms-core:50100"
+        aclAddress: "$(ACL_CONTRACT_ADDRESS)"
+  serviceMonitor:
+    enabled: true
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -135,6 +138,10 @@ kmsConnectorTxSender:
       configmap:
         name: mpc-party
         key: KMS_CONNECTOR__TX_SENDER_AWS_KMS_KEY_ID
+  tracing:
+    enabled: false
+  serviceMonitor:
+    enabled: true
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
