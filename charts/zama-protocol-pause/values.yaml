@@ -74,8 +74,7 @@ hostChains:
     aclContractAddress:
       devnet: "0x21d5fcabee8260b8aC18A2f0cEe6869AE08cc44b"
       testnet: "0xD99Cb9Fc3c42c87f2A4A12e8Fd60318d6bDdf985"
-      # TODO(polygon): fill in once the mainnet Polygon ACL contract is deployed.
-      mainnet: ""
+      mainnet: "0x6737F17e31cf26a1b62fb0362acC5a16CB156F49"
 
 # Dynamic RPC configuration
 env:
