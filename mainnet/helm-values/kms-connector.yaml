@@ -7,6 +7,8 @@ commonConfig:
   gatewayUrl: "$(CONDUIT_RPC_HTTP_URL)"
   ethereumUrl: "$(ETHEREUM_RPC_URL)"
   polygonUrl: "$(POLYGON_RPC_URL)"
+  polygonContractAddresses:
+    acl: "0x6737F17e31cf26a1b62fb0362acC5a16CB156F49"
   env:
     - name: CONDUIT_RPC_HTTP_URL
       valueFrom:
