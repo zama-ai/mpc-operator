@@ -46,6 +46,9 @@ ethereumToken:
 
 # Gateway pause configuration.
 gatewayChain:
+  # Set to false to skip the Gateway pause, e.g. to pause a single host chain
+  # (override `hostChains` with only that chain).
+  enabled: true
   pauseMethodId: "0x9a5a3bc4"
   # Name of the env var (declared under `env:`) holding the Gateway RPC URL.
   rpcUrlEnv: GATEWAY_RPC_URL
