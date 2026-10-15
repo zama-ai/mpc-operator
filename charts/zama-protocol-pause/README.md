@@ -27,6 +27,32 @@ hostChains:
 
 Then add the matching `ARBITRUM_RPC_URL` entry to the `env:` list.
 
+### Pausing a single host chain
+
+To pause only one host chain (e.g. Polygon) without touching the Gateway or the other host chains, deploy a separate release that disables the Gateway step and overrides `hostChains` with that chain only:
+
+```yaml
+fullnameOverride: zama-protocol-pause-polygon  # avoid clashing with the main release
+zamaTokenPause:
+  enabled: false
+gatewayChain:
+  enabled: false
+hostChains:
+  - name: polygon
+    displayName: Polygon
+    rpcUrlEnv: POLYGON_RPC_URL
+    aclPauseMethodId: "0x8456cb59"
+    aclContractAddress:
+      testnet: "0xD99Cb9Fc3c42c87f2A4A12e8Fd60318d6bDdf985"
+      mainnet: "0x6737F17e31cf26a1b62fb0362acC5a16CB156F49"
+env:
+  - name: POLYGON_RPC_URL
+    valueFrom:
+      secretKeyRef:
+        name: rpcs
+        key: polygon-rpc-url
+```
+
 Zama token mint pause is Ethereum-only and configured separately under `ethereumToken` (`tokenAddress` / `tokenPauserSetWrapperAddress` per network).
 
 The CronJob is configured to be suspended by default and uses an invalid schedule (`0 0 31 2 *`) to prevent automatic execution.

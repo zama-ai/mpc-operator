@@ -85,9 +85,11 @@ spec:
                   pause_contract "{{ .displayName }} (Host) {{ $net | title }}" "{{ printf "${%s}" .rpcUrlEnv }}" "{{ $addr }}" "{{ $addr }}" {{ .aclPauseMethodId }}
                   {{- end }}
                   {{- end }}
+                  {{- if .Values.gatewayChain.enabled }}
                   {{- $gw := index .Values.gatewayChain.gatewayConfigContractAddress $net }}
                   {{- /* Gateway Config has no paused() getter, so it uses pause_gateway_contract (no status check). */}}
                   pause_gateway_contract "Gateway {{ $net | title }}" "{{ printf "${%s}" .Values.gatewayChain.rpcUrlEnv }}" "{{ $gw }}" {{ .Values.gatewayChain.pauseMethodId }}
+                  {{- end }}
               env:
                 {{- if $loadWallet }}
                 {{- if .Values.wallet.awsKMS.enabled }}
