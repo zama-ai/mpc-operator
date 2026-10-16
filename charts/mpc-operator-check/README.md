@@ -19,7 +19,7 @@ All Jobs run with the least privilege `mpc-party-check` service account (`servic
 ## Usage
 
 ```bash
-helm upgrade --install mpc-operator-check oci://ghcr.io/zama-ai/mpc-operator/charts/mpc-operator-check \
+helm upgrade --install mpc-operator-check oci://hub.zama.org/zama-protocol/zama-ai/mpc-operator/charts/mpc-operator-check \
   --version 2.0.0 -n kms-decentralized
 ```
 
