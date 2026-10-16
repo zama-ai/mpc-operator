@@ -16,7 +16,7 @@ This repo contains example Helm chart configuration to deploy a Zama MPC party o
 
 ## Charts
 
-* [MPC Operator Check](./)
+* [MPC Operator Check](./charts/mpc-operator-check)
 
 ## License
 

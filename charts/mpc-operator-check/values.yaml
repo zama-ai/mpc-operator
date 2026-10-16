@@ -54,7 +54,7 @@ kubectl:
     tag: 1.35-dev
   script: |
     echo "Kubernetes namespace check"
-    kubectl get all
+    kubectl get pods,services,deployments,statefulsets
     echo "=================================================="
     echo "Kubernetes container docker image versions check"
     kubectl get pods -o=jsonpath='{range .items[*]}{.metadata.name}{"\t"}{range .spec.containers[*]}{.image}{" "}{end}{"\n"}{end}'
@@ -133,11 +133,10 @@ imagePullSecrets:
 nameOverride: ""
 fullnameOverride: ""
 
-# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+# Least privilege service account shared by all check Jobs, created with its IRSA role and RBAC by the
+# terraform-mpc-modules mpc-party module (create_check_service_account = true)
 serviceAccount:
-  create: false
-  annotations: {}
-  name: "mpc-party"
+  name: "mpc-party-check"
 
 configmap:
   name: "mpc-party"
