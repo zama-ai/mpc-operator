@@ -51,12 +51,21 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Create the name of the service account to use
+Job name unique per release and revision, so a check can be rerun right away while the Jobs of
+the previous run are kept until ttlSecondsAfterFinished. The prefix is truncated (not the component) to keep names
+distinct and Indexed Job pod hostnames under 63 chars.
+Usage: include "mpc-operator-check.jobName" (dict "context" . "component" "kms-core")
 */}}
-{{- define "mpc-operator-check.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "mpc-operator-check.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
+{{- define "mpc-operator-check.jobName" -}}
+{{- $prefix := include "mpc-operator-check.fullname" .context | trunc 34 | trimSuffix "-" }}
+{{- printf "%s-%s-%d" $prefix .component (int .context.Release.Revision) }}
 {{- end }}
+
+{{/*
+Check pod labels, including the release revision to select the logs of a given run
+*/}}
+{{- define "mpc-operator-check.podLabels" -}}
+app: mpc-operator-check
+{{ include "mpc-operator-check.selectorLabels" . }}
+mpc-operator-check/revision: {{ .Release.Revision | quote }}
 {{- end }}
