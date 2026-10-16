@@ -29,20 +29,14 @@ Each run creates Jobs suffixed with the release revision (for example `mpc-opera
 kubectl logs -n kms-decentralized -l app.kubernetes.io/instance=mpc-operator-check,mpc-operator-check/revision=<revision> --all-containers --tail=-1
 ```
 
-## Upgrading from 1.x
+## Cleaning 1.x resources
 
-1. Apply a terraform-mpc-modules version that creates the `mpc-party-check` service account.
-2. Remove the cluster-wide RBAC left over by 1.x runs (Helm only deleted it when all checks succeeded):
+To remove the cluster-wide RBAC left over by 1.x runs (Helm only deleted it when all checks succeeded):
 
-   ```bash
-   kubectl delete clusterrolebinding mpc-operator-check --ignore-not-found
-   kubectl delete clusterrole mpc-operator-check-resource-reader --ignore-not-found
-   ```
-
-3. Review your values overrides:
-   - `serviceAccount.create` and `serviceAccount.annotations` are removed.
-   - `serviceAccount.name` now applies to all Jobs (no more `-connector` suffix).
-   - `kubectl.script` overrides must only use resources allowed by the check Role (`kubectl get all` is no longer allowed).
+```bash
+kubectl delete clusterrolebinding mpc-operator-check --ignore-not-found
+kubectl delete clusterrole mpc-operator-check-resource-reader --ignore-not-found
+```
 
 ## Verify permissions
 
