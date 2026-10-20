@@ -8,7 +8,7 @@ All Jobs run with the least privilege `mpc-party-check` service account (`servic
 
 | Job | Kubernetes API | AWS |
 | --- | -------------- | --- |
-| `kms-core` | `get`/`list` pods, services, deployments, statefulsets and nodes; pod logs | `s3:ListBucket` on the public and private vault buckets |
+| `kms-core` | `get`/`list` pods, services, deployments, statefulsets and nodes; pod logs | `s3:ListBucket` on the public, private and backup vault buckets; `s3:GetReplicationConfiguration` on the backup vault bucket; `s3:ListBucket` on the backup replica bucket |
 | `kms-connector` | pod logs | none |
 | `kms-keys` | none (`automountServiceAccountToken: false`) | `kms:GetPublicKey` on the kms-connector tx sender key |
 
@@ -16,11 +16,13 @@ All Jobs run with the least privilege `mpc-party-check` service account (`servic
 >
 > When the kms-connector tx sender key lives in another AWS account (`kms_use_cross_account_kms_key = true`), its key policy must also allow `kms:GetPublicKey` for the check IRSA role, otherwise the `kms-keys` Job fails.
 
+The kms-core AWS check lists the backup vault (`KMS_CORE__BACKUP_VAULT__STORAGE__S3__BUCKET`, under `KMS_CORE__BACKUP_VAULT__STORAGE__S3__PREFIX` when set) and the replica bucket named by that bucket's replication configuration. The job fails when the backup prefix is empty, replication is not enabled, the replica cannot be listed, or a backup object is missing from the replica. The backup bucket policy must allow the check role `s3:ListBucket` and `s3:GetReplicationConfiguration`. The replica bucket policy must allow `s3:ListBucket`. Set `awsCli.backupCheck.enabled` to `false` to skip this check.
+
 ## Usage
 
 ```bash
 helm upgrade --install mpc-operator-check oci://hub.zama.org/zama-protocol/zama-ai/mpc-operator/charts/mpc-operator-check \
-  --version 2.0.0 -n kms-decentralized
+  --version 2.1.0 -n kms-decentralized
 ```
 
 Each run creates Jobs suffixed with the release revision (for example `mpc-operator-check-kms-core-3`), so a check can be rerun right away. Jobs and their logs are kept for `job.ttlSecondsAfterFinished` seconds (300 by default), whether they succeed or fail:

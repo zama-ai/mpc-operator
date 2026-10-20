@@ -21,6 +21,96 @@ awsCli:
     aws s3 ls --recursive s3://$KMS_CORE__PUBLIC_VAULT__STORAGE__S3__BUCKET
     echo "Listing all files in KMS-Core Private S3 bucket: $KMS_CORE__PRIVATE_VAULT__STORAGE__S3__BUCKET"
     aws s3 ls --recursive s3://$KMS_CORE__PRIVATE_VAULT__STORAGE__S3__BUCKET
+  # Lists the backup vault and the replica bucket named in its replication configuration.
+  # Requires s3:ListBucket and s3:GetReplicationConfiguration on the backup bucket, and s3:ListBucket on the replica.
+  backupCheck:
+    enabled: true
+    script: |
+      echo "Listing all files in KMS-Core Backup S3 bucket: $KMS_CORE__BACKUP_VAULT__STORAGE__S3__BUCKET"
+      if [ -z "$KMS_CORE__BACKUP_VAULT__STORAGE__S3__BUCKET" ]; then
+        echo "Error: KMS_CORE__BACKUP_VAULT__STORAGE__S3__BUCKET is not set"
+        exit 1
+      fi
+      backup_bucket="$KMS_CORE__BACKUP_VAULT__STORAGE__S3__BUCKET"
+      backup_prefix="${KMS_CORE__BACKUP_VAULT__STORAGE__S3__PREFIX:-}"
+      if [ -n "$backup_prefix" ]; then
+        backup_uri="s3://${backup_bucket}/${backup_prefix}"
+      else
+        backup_uri="s3://${backup_bucket}"
+      fi
+      if ! backup_listing=$(aws s3 ls --recursive "$backup_uri"); then
+        echo "Error: failed to list ${backup_uri}"
+        exit 1
+      fi
+      printf '%s\n' "$backup_listing"
+      if [ -z "$backup_listing" ]; then
+        echo "Error: no objects under ${backup_uri}"
+        exit 1
+      fi
+
+      echo "Discovering replica bucket from replication configuration of ${backup_bucket}"
+      if ! replication=$(aws s3api get-bucket-replication \
+        --bucket "$backup_bucket" \
+        --output text \
+        --query 'ReplicationConfiguration.Rules[].[Status,Destination.Bucket]'); then
+        echo "Error: failed to read replication configuration for ${backup_bucket}"
+        echo "The check role needs s3:GetReplicationConfiguration on this bucket"
+        exit 1
+      fi
+      replica_arn=$(printf '%s\n' "$replication" | while read -r status arn _; do
+        if [ "$status" = "Enabled" ]; then
+          printf '%s\n' "$arn"
+          break
+        fi
+      done)
+      if [ -z "$replica_arn" ] || [ "$replica_arn" = "None" ]; then
+        echo "Error: no enabled replication destination on ${backup_bucket}"
+        exit 1
+      fi
+      replica_bucket=${replica_arn##*:}
+      if [ -n "$backup_prefix" ]; then
+        replica_uri="s3://${replica_bucket}/${backup_prefix}"
+      else
+        replica_uri="s3://${replica_bucket}"
+      fi
+      echo "Listing all files in KMS-Core Backup replica S3 bucket: ${replica_bucket}"
+      if ! replica_listing=$(aws s3 ls --recursive "$replica_uri"); then
+        echo "Error: failed to list ${replica_uri}"
+        echo "The check role needs s3:ListBucket on the replica bucket"
+        exit 1
+      fi
+      printf '%s\n' "$replica_listing"
+
+      object_keys() {
+        printf '%s\n' "$1" | while IFS= read -r line; do
+          [ -n "$line" ] || continue
+          rest=${line#* }
+          rest=${rest#* }
+          rest=${rest#"${rest%%[![:space:]]*}"}
+          printf '%s\n' "${rest#* }"
+        done
+      }
+      backup_keys=$(object_keys "$backup_listing")
+      replica_keys=$(object_keys "$replica_listing")
+      missing=0
+      for key in $backup_keys; do
+        [ -n "$key" ] || continue
+        found=0
+        for replica_key in $replica_keys; do
+          if [ "$replica_key" = "$key" ]; then
+            found=1
+            break
+          fi
+        done
+        if [ "$found" -eq 0 ]; then
+          echo "Error: backup object missing from replica: ${key}"
+          missing=1
+        fi
+      done
+      if [ "$missing" -ne 0 ]; then
+        exit 1
+      fi
+      echo "Replica bucket ${replica_bucket} contains every backup object"
 gatewayNode:
   enabled: true
   image:
