@@ -38,6 +38,10 @@ spec:
             - |
               echo "=================================================="
               {{- .Values.awsCli.script | nindent 14 }}
+              {{- if .Values.awsCli.backupCheck.enabled }}
+              echo "=================================================="
+              {{- .Values.awsCli.backupCheck.script | nindent 14 }}
+              {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ .Values.configmap.name }}
