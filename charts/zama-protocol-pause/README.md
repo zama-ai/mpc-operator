@@ -5,7 +5,7 @@ A Helm chart for deploying Kubernetes CronJobs to pause the Zama Protocol on its
 ## Overview
 
 This chart deploys CronJobs that can execute pause transactions on:
-- Host-chain ACL Contracts, one per entry in `hostChains` (e.g. Ethereum, Polygon)
+- Host-chain ACL Contracts, one per entry in `hostChains` (e.g. Ethereum, Polygon, BNB Smart Chain)
 - Gateway Config Contract (on Zama Gateway Mainnet/Testnet/Devnet)
 - Zama Token mint on Ethereum (configured under `ethereumToken`)
 
@@ -168,6 +168,12 @@ env:
       secretKeyRef:
         name: rpcs
         key: polygon-rpc-url
+  # Only needed on networks that also pause BNB.
+  - name: BNB_RPC_URL
+    valueFrom:
+      secretKeyRef:
+        name: rpcs
+        key: bnb-rpc-url
 ```
 
 **Note**: It is highly recommended to use authenticated RPC endpoints instead of public ones for reliability.
