@@ -78,6 +78,13 @@ hostChains:
       devnet: "0x21d5fcabee8260b8aC18A2f0cEe6869AE08cc44b"
       testnet: "0xD99Cb9Fc3c42c87f2A4A12e8Fd60318d6bDdf985"
       mainnet: "0x6737F17e31cf26a1b62fb0362acC5a16CB156F49"
+  - name: bnb
+    displayName: BNB Smart Chain
+    rpcUrlEnv: BNB_RPC_URL
+    aclPauseMethodId: "0x8456cb59"
+    aclContractAddress:
+      # Protocol testnet deployment; devnet uses a separate deployment on chain 97.
+      testnet: "0x9Adac873Ae2f737AF011f0778305Cff0B220ac36"
 
 # Dynamic RPC configuration
 env:
@@ -96,6 +103,13 @@ env:
       secretKeyRef:
         name: rpcs
         key: polygon-rpc-url
+  - name: BNB_RPC_URL
+    valueFrom:
+      secretKeyRef:
+        name: rpcs
+        key: bnb-rpc-url
+        # Optional for networks without a BNB ACL in this chart version.
+        optional: true
 
 # It is highly recommended to use an authenticated RPC endpoint instead of a public one for reliability.
 # Example public RPC endpoints for reference:
