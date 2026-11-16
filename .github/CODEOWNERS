@@ -1,0 +1,3 @@
+# Default owners for the repository. The last matching pattern wins.
+# Matches terraform-mpc-modules: the infra-devops team reviews every change.
+* @zama-ai/infra-devops
