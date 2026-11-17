@@ -27,8 +27,8 @@ create_keypair() {
     print_status "Step 1: Creating Ethereum keypair..."
     
     WALLET_JSON=$(cast wallet new --json)
-    PRIVATE_KEY=$(echo "$WALLET_JSON" | jq -r ".[0].private_key")
-    PUBLIC_KEY=$(echo "$WALLET_JSON" | jq -r ".[0].address")
+    PRIVATE_KEY=$(echo "$WALLET_JSON" | jq -er "(.data? // .)[0].private_key")
+    PUBLIC_KEY=$(echo "$WALLET_JSON" | jq -er "(.data? // .)[0].address")
     
     echo "$PRIVATE_KEY" > kms-connector-wallet.key
     
